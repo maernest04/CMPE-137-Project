@@ -18,6 +18,31 @@ class StudySpace {
     required this.longitude,
     required this.rating,
   });
+
+  // JSON conversion – wire up later to real API
+  factory StudySpace.fromJson(Map<String, dynamic> json) {
+    return StudySpace(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      building: json['building'] as String,
+      noiseLevel: json['noiseLevel'] as String,
+      hasOutlets: json['hasOutlets'] as bool,
+      latitude: json['latitude'] as double,
+      longitude: json['longitude'] as double,
+      rating: json['rating'] as double,
+    );
+  }
+  
+  Map<String, dynamic> toJson() => {
+  'id': id,
+  'name': name,
+  'building': building,
+  'noiseLevel': noiseLevel,
+  'hasOutlets': hasOutlets,
+  'latitude': latitude,
+  'longitude': longitude,
+  'rating': rating,
+  };
 }
 
 // Mock Data for the UI team to build components against
