@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cmpe_137_study_space/models/study_space.dart';
+import 'package:cmpe_137_study_space/widgets/study_space_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,21 +10,21 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Discover Spaces'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () {
+              // TODO: Implement filter modal
+            },
+          ),
+        ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.explore, size: 80, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              'Home / Discovery Feed',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            const Text('UI Team: Build the study space feed here!'),
-          ],
-        ),
+      body: ListView.builder(
+        itemCount: mockStudySpaces.length,
+        itemBuilder: (context, index) {
+          final space = mockStudySpaces[index];
+          return StudySpaceCard(space: space);
+        },
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import '../models/study_space.dart';
+import 'package:cmpe_137_study_space/theme/app_theme.dart';
+import 'package:cmpe_137_study_space/models/study_space.dart';
 
 class StudySpaceCard extends StatelessWidget {
   final StudySpace space;
@@ -13,91 +13,88 @@ class StudySpaceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-            // TODO: Navigate to detail screen
+          // TODO: Navigate to space details screen
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Placeholder (In reality, this would be a NetworkImage)
+            // Placeholder Image (we'll replace this with real images later)
             Container(
-              height: 180,
+              height: 150,
               width: double.infinity,
-              color: Colors.grey[300],
-              child: const Icon(Icons.image, size: 60, color: Colors.grey),
+              color: Colors.grey.shade300,
+              child: const Center(
+                child: Icon(
+                  Icons.image_outlined,
+                  size: 50,
+                  color: Colors.grey,
+                ),
+              ),
             ),
             
-            // Content
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title and Rating Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           space.name,
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.sjsuBlue,
-                              ),
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.sjsuGold.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star, color: AppTheme.sjsuGold, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              space.rating.toString(),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: AppTheme.sjsuGold, size: 20),
+                          const SizedBox(width: 4),
+                          Text(
+                            space.rating.toString(),
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  
                   const SizedBox(height: 4),
-                  
-                  // Building Name
                   Text(
                     space.building,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey.shade600,
                     ),
                   ),
-                  
                   const SizedBox(height: 12),
                   
-                  // Tags/Features Row
+                  // Filter tags
                   Row(
                     children: [
-                      _buildFeatureTag(
-                        icon: Icons.volume_up, 
-                        text: space.noiseLevel,
-                        color: space.noiseLevel == 'Quiet' ? Colors.green : Colors.orange,
+                      _buildTag(
+                        context,
+                        icon: Icons.volume_up,
+                        label: space.noiseLevel,
+                        color: Colors.blue.shade100,
+                        textColor: Colors.blue.shade900,
                       ),
                       const SizedBox(width: 8),
                       if (space.hasOutlets)
-                        _buildFeatureTag(
-                          icon: Icons.electrical_services, 
-                          text: 'Outlets',
-                          color: AppTheme.sjsuBlue,
+                        _buildTag(
+                          context,
+                          icon: Icons.electrical_services,
+                          label: 'Outlets',
+                          color: Colors.green.shade100,
+                          textColor: Colors.green.shade900,
                         ),
                     ],
                   ),
@@ -110,29 +107,29 @@ class StudySpaceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureTag({
+  Widget _buildTag(
+    BuildContext context, {
     required IconData icon,
-    required String text,
+    required String label,
     required Color color,
+    required Color textColor,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        border: Border.all(color: color.withOpacity(0.5)),
-        borderRadius: BorderRadius.circular(12),
-        color: color.withOpacity(0.1),
+        color: color,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
+          Icon(icon, size: 14, color: textColor),
           const SizedBox(width: 4),
           Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w600,
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
