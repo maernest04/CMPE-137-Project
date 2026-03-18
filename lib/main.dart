@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cmpe_137_study_space/services/auth_scope.dart';
+import 'package:cmpe_137_study_space/services/auth_service.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
 import 'package:cmpe_137_study_space/screens/home_screen.dart';
 import 'package:cmpe_137_study_space/screens/map_screen.dart';
@@ -12,10 +14,18 @@ void main() {
 }
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _sectionANavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionANav');
-final _sectionBNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionBNav');
-final _sectionCNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionCNav');
-final _sectionDNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'sectionDNav');
+final _sectionANavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'sectionANav',
+);
+final _sectionBNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'sectionBNav',
+);
+final _sectionCNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'sectionCNav',
+);
+final _sectionDNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'sectionDNav',
+);
 
 final goRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -72,11 +82,14 @@ class SpartanSpacesApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'SpartanSpaces',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      routerConfig: goRouter,
+    return AuthScope(
+      authService: AuthService(),
+      child: MaterialApp.router(
+        title: 'SpartanSpaces',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        routerConfig: goRouter,
+      ),
     );
   }
 }

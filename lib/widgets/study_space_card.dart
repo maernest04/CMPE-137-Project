@@ -1,14 +1,168 @@
 import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
+import 'package:cmpe_137_study_space/services/auth_scope.dart';
 
 class StudySpaceCard extends StatelessWidget {
   final StudySpace space;
 
-  const StudySpaceCard({
-    super.key,
-    required this.space,
-  });
+  const StudySpaceCard({super.key, required this.space});
+
+  Future<void> _showLeaveReviewModal(BuildContext context) async {
+    double rating = 3;
+    double vibe = 3;
+    final commentController = TextEditingController();
+
+    String emojiFor(double value) {
+      final index = value.clamp(1, 5).round() - 1;
+      const emojis = ['😡', '😕', '😐', '🙂', '😄'];
+      return emojis[index];
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Leave a review',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    space.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'How was it?',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        emojiFor(rating),
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Slider(
+                          value: rating,
+                          min: 1,
+                          max: 5,
+                          divisions: 4,
+                          label: rating.round().toString(),
+                          onChanged: (value) {
+                            setState(() => rating = value);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Noise level',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        emojiFor(vibe),
+                        style: const TextStyle(fontSize: 32),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Slider(
+                          value: vibe,
+                          min: 1,
+                          max: 5,
+                          divisions: 4,
+                          label: vibe.round().toString(),
+                          onChanged: (value) {
+                            setState(() => vibe = value);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: commentController,
+                    decoration: const InputDecoration(
+                      labelText: 'Add a comment (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final auth = AuthScope.of(context);
+                        Navigator.of(context).pop();
+
+                        if (auth.isSignedIn) {
+                          auth.addReview();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Thanks for your review of ${space.name}! 👍',
+                              ),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Sign in to save your reviews and see them on your profile.',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Submit review'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    commentController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +170,7 @@ class StudySpaceCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {
-          // TODO: Navigate to space details screen
-        },
+        onTap: () => _showLeaveReviewModal(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -28,14 +180,10 @@ class StudySpaceCard extends StatelessWidget {
               width: double.infinity,
               color: Colors.grey.shade300,
               child: const Center(
-                child: Icon(
-                  Icons.image_outlined,
-                  size: 50,
-                  color: Colors.grey,
-                ),
+                child: Icon(Icons.image_outlined, size: 50, color: Colors.grey),
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -47,22 +195,24 @@ class StudySpaceCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           space.name,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.star, color: AppTheme.sjsuGold, size: 20),
+                          const Icon(
+                            Icons.star,
+                            color: AppTheme.sjsuGold,
+                            size: 20,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             space.rating.toString(),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -76,7 +226,7 @@ class StudySpaceCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Filter tags
                   Row(
                     children: [

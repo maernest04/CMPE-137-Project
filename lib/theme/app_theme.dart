@@ -14,7 +14,6 @@ class AppTheme {
         seedColor: sjsuBlue,
         primary: sjsuBlue,
         secondary: sjsuGold,
-        background: background,
         surface: surface,
       ),
       scaffoldBackgroundColor: background,
@@ -44,9 +43,7 @@ class AppTheme {
         color: surface,
         elevation: 4,
         shadowColor: Colors.black12,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
