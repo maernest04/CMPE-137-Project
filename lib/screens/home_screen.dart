@@ -4,11 +4,6 @@ import 'package:cmpe_137_study_space/widgets/study_space_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
-//testing firebase auth integration
-import 'package:firebase_auth/firebase_auth.dart';
-import '../services/review_service.dart';
-
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -250,50 +245,6 @@ Future<void> loadSpaces() async {
                 ],
               ),
             ),
-          //TESTING:
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: ElevatedButton(
-              onPressed: () async {
-                try {
-                  if (FirebaseAuth.instance.currentUser == null) {
-                    await FirebaseAuth.instance.signInAnonymously();
-                    print('Signed in anonymously');
-                  }
-
-                  final user = FirebaseAuth.instance.currentUser;
-                  print('Current user: ${user?.uid}');
-
-                  final reviewService = ReviewService();
-
-                  await reviewService.submitReview(
-                    spaceId: 'Lb0sQwYLtGG1quus7dx',
-                    noiseLevel: 3,
-                    comfort: 4,
-                    crowdLevel: 2,
-                    easeOfAccess: 5,
-                    comment: 'Nice study spot',
-                  );
-
-                  print('Review submitted successfully');
-
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Review submitted successfully')),
-                  );
-                } catch (e) {
-                  print('Review submission failed: $e');
-
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Review submission failed: $e')),
-                  );
-                }
-              },
-              child: const Text('Test Submit Review'),
-            ),
-          ),
-          //TESTING
 
           Expanded(
             child: filteredSpaces.isEmpty
@@ -308,7 +259,10 @@ Future<void> loadSpaces() async {
                     itemCount: filteredSpaces.length,
                     itemBuilder: (context, index) {
                       final space = filteredSpaces[index];
-                      return StudySpaceCard(space: space);
+                      return StudySpaceCard(
+                        space: space,
+                        onReviewSubmitted: loadSpaces,
+                      );
                     },
                   ),
           ),
