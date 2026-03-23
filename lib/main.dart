@@ -8,8 +8,11 @@ import 'package:cmpe_137_study_space/screens/map_screen.dart';
 import 'package:cmpe_137_study_space/screens/saved_screen.dart';
 import 'package:cmpe_137_study_space/screens/profile_screen.dart';
 import 'package:cmpe_137_study_space/screens/scaffold_with_nav_bar.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const SpartanSpacesApp());
 }
 
