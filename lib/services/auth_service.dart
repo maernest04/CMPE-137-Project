@@ -1,17 +1,60 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// A very small in-memory auth service used to prototype the UI.
-///
-/// This is intentionally not tied to any real backend (e.g. Firebase).
-/// Replace with real auth wiring later.
+/// Authentication service that manages user authentication via Firebase.
 class AuthService extends ChangeNotifier {
-  String? _userEmail;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  User? _currentUser;
   String? _displayName;
   String? _major;
   int _reviewCount = 0;
+  bool _isLoading = false;
+  String? _error;
+
+  AuthService() {
+    _initializeAuthListener();
+  }
+
+  /// Initialize listener for auth state changes
+  void _initializeAuthListener() {
+    _firebaseAuth.authStateChanges().listen((User? user) async {
+      _currentUser = user;
+      if (user != null) {
+        await _loadUserData(user.uid);
+      } else {
+        _displayName = null;
+        _major = null;
+        _reviewCount = 0;
+      }
+      notifyListeners();
+    });
+  }
+
+  /// Load user data from Firestore
+  Future<void> _loadUserData(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        _displayName = doc['displayName'] ?? '';
+        _major = doc['major'] ?? 'Undeclared';
+        _reviewCount = doc['reviewCount'] ?? 0;
+      } else {
+        _displayName = _currentUser?.email?.split('@').first ?? '';
+        _major = 'Undeclared';
+        _reviewCount = 0;
+      }
+    } catch (e) {
+      _error = 'Failed to load user data: $e';
+      print(_error);
+    }
+    notifyListeners();
+  }
 
   /// The currently signed in user email, or null if not signed in.
-  String? get userEmail => _userEmail;
+  String? get userEmail => _currentUser?.email;
 
   /// The name the user entered when registering.
   String? get displayName => _displayName;
@@ -19,61 +62,141 @@ class AuthService extends ChangeNotifier {
   /// The user's major (also entered during registration).
   String? get major => _major;
 
-  /// Number of reviews the user has submitted in this session.
+  /// Number of reviews the user has submitted.
   int get reviewCount => _reviewCount;
 
   /// Whether a user is signed in.
-  bool get isSignedIn => _userEmail != null;
+  bool get isSignedIn => _currentUser != null;
 
-  /// Simulates a sign-in call.
-  ///
-  /// In a real app, this would call Firebase Auth and throw on failure.
-  Future<void> signIn({required String email, required String password}) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    // Fake validation: password must be at least 6 characters and email contains @
-    if (!email.contains('@') || password.length < 6) {
-      throw Exception('Invalid credentials');
-    }
+  /// Whether an async operation is in progress.
+  bool get isLoading => _isLoading;
 
-    // In this mock service, we don't persist user details; just give a reasonable default.
-    _userEmail = email;
-    _displayName = email.split('@').first;
-    _major = 'Undeclared';
-    _reviewCount = 0;
+  /// The last error message, if any.
+  String? get error => _error;
+
+  /// Clear error message
+  void clearError() {
+    _error = null;
     notifyListeners();
   }
 
-  /// Simulates creating a new account.
+  /// Signs in with email and password.
+  Future<void> signIn({required String email, required String password}) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await _firebaseAuth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      _error = _getErrorMessage(e.code);
+      rethrow;
+    } catch (e) {
+      _error = 'An unexpected error occurred: $e';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Creates a new account with email and password.
   Future<void> register({
     required String email,
     required String password,
     required String displayName,
     required String major,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!email.contains('@') || password.length < 6) {
-      throw Exception('Invalid registration details');
-    }
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
 
-    _userEmail = email;
-    _displayName = displayName;
-    _major = major;
-    _reviewCount = 0;
-    notifyListeners();
+      final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+
+      // Update display name in Firebase Auth
+      await userCredential.user?.updateDisplayName(displayName);
+
+      // Create user document in Firestore
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'email': email.trim(),
+        'displayName': displayName,
+        'major': major,
+        'reviewCount': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Reload user to get updated display name
+      await userCredential.user?.reload();
+    } on FirebaseAuthException catch (e) {
+      _error = _getErrorMessage(e.code);
+      rethrow;
+    } catch (e) {
+      _error = 'An unexpected error occurred: $e';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Signs the user out.
-  void signOut() {
-    _userEmail = null;
-    _displayName = null;
-    _major = null;
-    _reviewCount = 0;
-    notifyListeners();
+  Future<void> signOut() async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await _firebaseAuth.signOut();
+    } catch (e) {
+      _error = 'Failed to sign out: $e';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// Records that the user left a review.
-  void addReview() {
-    _reviewCount += 1;
-    notifyListeners();
+  Future<void> addReview() async {
+    if (_currentUser == null) return;
+
+    try {
+      _reviewCount += 1;
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'reviewCount': _reviewCount,
+      });
+      notifyListeners();
+    } catch (e) {
+      _reviewCount -= 1; // Revert on error
+      _error = 'Failed to update review count: $e';
+      notifyListeners();
+    }
+  }
+
+  /// Get user-friendly error message from Firebase error code
+  String _getErrorMessage(String code) {
+    switch (code) {
+      case 'weak-password':
+        return 'Password is too weak. Use at least 6 characters.';
+      case 'email-already-in-use':
+        return 'An account with this email already exists.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'user-not-found':
+        return 'No account found with this email.';
+      case 'wrong-password':
+        return 'Incorrect password.';
+      case 'too-many-requests':
+        return 'Too many login attempts. Please try again later.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
   }
 }
