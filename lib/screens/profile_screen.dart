@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-
+import 'package:flutter/material.dart';import 'package:go_router/go_router.dart';
 import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/services/auth_service.dart';
 
@@ -181,9 +180,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ElevatedButton.icon(
           icon: const Icon(Icons.logout),
           label: const Text('Sign Out'),
-          onPressed: () {
-            authScope.signOut();
-            _showMessage('Signed out.');
+          onPressed: () async {
+            try {
+              await authScope.signOut();
+              if (mounted) {
+                context.go('/login');
+              }
+            } catch (e) {
+              _showMessage('Error signing out: $e');
+            }
           },
         ),
         const SizedBox(height: 16),
