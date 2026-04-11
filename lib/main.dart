@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/services/auth_service.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
+import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/screens/home_screen.dart';
+import 'package:cmpe_137_study_space/screens/study_space_detail_screen.dart';
 import 'package:cmpe_137_study_space/screens/map_screen.dart';
 import 'package:cmpe_137_study_space/screens/saved_screen.dart';
 import 'package:cmpe_137_study_space/screens/profile_screen.dart';
@@ -73,6 +75,30 @@ GoRouter _buildGoRouter(AuthService authService) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => const HomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'space/:id',
+                    name: 'studySpaceDetail',
+                    builder: (context, state) {
+                      final extra = state.extra;
+                      if (extra is StudySpaceDetailArgs) {
+                        return StudySpaceDetailScreen(
+                          space: extra.space,
+                          onReviewSubmitted: extra.onReviewSubmitted,
+                        );
+                      }
+                      if (extra is StudySpace) {
+                        return StudySpaceDetailScreen(space: extra);
+                      }
+                      return Scaffold(
+                        appBar: AppBar(title: const Text('Space')),
+                        body: const Center(
+                          child: Text('This space could not be loaded.'),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),

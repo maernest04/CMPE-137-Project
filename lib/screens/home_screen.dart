@@ -44,12 +44,15 @@ Future<void> loadSpaces() async {
     return StudySpace(
       id: doc.id,
       name: data['name'] ?? '',
-      building: data['buildingName'] ?? '',  // ✅ FIXED
+      building: data['buildingName'] ?? '',
       noiseLevel: _mapNoiseLevel(data['noiseLevelAvg']),
       hasOutlets: data['hasPowerOutlets'] ?? false,
-      latitude: 0.0,   // temporary placeholder
-      longitude: 0.0,  // temporary placeholder
+      latitude: 0.0,
+      longitude: 0.0,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
+      description: data['description'] is String
+          ? data['description'] as String
+          : null,
     );
 
     }).toList();
