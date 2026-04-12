@@ -131,6 +131,29 @@ GoRouter _buildGoRouter(AuthService authService) {
           ),
         ],
       ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/study-space/:id',
+        name: 'studySpaceDetailRoot',
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is StudySpaceDetailArgs) {
+            return StudySpaceDetailScreen(
+              space: extra.space,
+              onReviewSubmitted: extra.onReviewSubmitted,
+            );
+          }
+          if (extra is StudySpace) {
+            return StudySpaceDetailScreen(space: extra);
+          }
+          return Scaffold(
+            appBar: AppBar(title: const Text('Space')),
+            body: const Center(
+              child: Text('This space could not be loaded.'),
+            ),
+          );
+        },
+      ),
     ],
   );
 }
