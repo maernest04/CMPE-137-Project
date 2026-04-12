@@ -7,6 +7,8 @@ class StudySpace {
   final double latitude;
   final double longitude;
   final double rating;
+  /// Optional longer description from Firestore or mock data.
+  final String? description;
 
   StudySpace({
     required this.id,
@@ -17,6 +19,7 @@ class StudySpace {
     required this.latitude,
     required this.longitude,
     required this.rating,
+    this.description,
   });
 }
 
@@ -31,6 +34,9 @@ final List<StudySpace> mockStudySpaces = [
     latitude: 37.3355,
     longitude: -121.8850,
     rating: 4.8,
+    description:
+        'Dedicated quiet floor with long tables, good lighting, and reliable '
+        'Wi‑Fi. Popular during finals—arrive early for a seat near outlets.',
   ),
   StudySpace(
     id: '2',
@@ -41,6 +47,9 @@ final List<StudySpace> mockStudySpaces = [
     latitude: 37.3360,
     longitude: -121.8814,
     rating: 3.9,
+    description:
+        'High-energy spot with food nearby. Better for group work or casual '
+        'reading than deep focus sessions.',
   ),
   StudySpace(
     id: '3',
@@ -51,5 +60,8 @@ final List<StudySpace> mockStudySpaces = [
     latitude: 37.3340,
     longitude: -121.8805,
     rating: 4.5,
+    description:
+        'Comfortable seating between classes. Foot traffic picks up midday; '
+        'mornings are usually calmer.',
   ),
 ];
