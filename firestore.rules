@@ -3,6 +3,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Reviews: clients may update/delete only their own document (create via Cloud Function).
+    match /spaces/{spaceId}/reviews/{reviewId} {
+      allow read: if request.time < timestamp.date(2026, 4, 19);
+      allow create: if false;
+      allow update, delete: if request.time < timestamp.date(2026, 4, 19)
+        && request.auth != null
+        && request.auth.uid == resource.data.userId;
+    }
+
     // This rule allows anyone with your Firestore database reference to view, edit,
     // and delete all data in your Firestore database. It is useful for getting
     // started, but it is configured to expire after 30 days because it

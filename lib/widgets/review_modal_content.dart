@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:cmpe_137_study_space/models/review.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/services/review_service.dart';
+import 'package:cmpe_137_study_space/services/study_space_reviews_repository.dart';
+import 'package:cmpe_137_study_space/utils/review_rating_labels.dart';
 
 class ReviewModalContent extends StatefulWidget {
   final StudySpace space;
+  /// When set, the sheet edits this review (Firestore update) instead of creating.
+  final Review? existingReview;
   final Future<void> Function()? onReviewSubmitted;
 
   const ReviewModalContent({
     super.key,
     required this.space,
+    this.existingReview,
     this.onReviewSubmitted,
   });
 
@@ -18,13 +24,22 @@ class ReviewModalContent extends StatefulWidget {
 
 class _ReviewModalContentState extends State<ReviewModalContent> {
   late TextEditingController _commentController;
-  double _rating = 3;
-  double _vibe = 3;
+  late double _noise;
+  late double _comfort;
+  late double _crowd;
+  late double _access;
+
+  bool get _isEdit => widget.existingReview != null;
 
   @override
   void initState() {
     super.initState();
-    _commentController = TextEditingController();
+    final e = widget.existingReview;
+    _noise = (e?.noiseLevel ?? 3).toDouble().clamp(1, 5);
+    _comfort = (e?.comfort ?? 3).toDouble().clamp(1, 5);
+    _crowd = (e?.crowdLevel ?? 3).toDouble().clamp(1, 5);
+    _access = (e?.easeOfAccess ?? 3).toDouble().clamp(1, 5);
+    _commentController = TextEditingController(text: e?.comment ?? '');
   }
 
   @override
@@ -39,18 +54,34 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
     return emojis[index];
   }
 
-  Future<void> _submitReview() async {
+  Future<void> _submit() async {
     try {
-      final reviewService = ReviewService();
+      final comment = _commentController.text.trim();
+      final noise = _noise.round().clamp(1, 5);
+      final comfort = _comfort.round().clamp(1, 5);
+      final crowd = _crowd.round().clamp(1, 5);
+      final access = _access.round().clamp(1, 5);
 
-      await reviewService.submitReview(
-        spaceId: widget.space.id,
-        noiseLevel: _vibe.round(),
-        comfort: _rating.round(),
-        crowdLevel: 3,
-        easeOfAccess: 3,
-        comment: _commentController.text.trim(),
-      );
+      if (_isEdit) {
+        await StudySpaceReviewsRepository().updateReview(
+          spaceId: widget.space.id,
+          reviewId: widget.existingReview!.id,
+          noiseLevel: noise,
+          comfort: comfort,
+          crowdLevel: crowd,
+          easeOfAccess: access,
+          comment: comment,
+        );
+      } else {
+        await ReviewService().submitReview(
+          spaceId: widget.space.id,
+          noiseLevel: noise,
+          comfort: comfort,
+          crowdLevel: crowd,
+          easeOfAccess: access,
+          comment: comment,
+        );
+      }
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -64,7 +95,9 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Thanks for your review of ${widget.space.name}! 👍',
+              _isEdit
+                  ? 'Review updated for ${widget.space.name}.'
+                  : 'Thanks for your review of ${widget.space.name}! 👍',
             ),
           ),
         );
@@ -73,15 +106,56 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit review: $e'),
+            content: Text(
+              _isEdit ? 'Failed to update review: $e' : 'Failed to submit review: $e',
+            ),
           ),
         );
       }
     }
   }
 
+  Widget _ratingSlider({
+    required String title,
+    required String subtitle,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.bodyLarge),
+        Text(
+          subtitle,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text(_emojiFor(value), style: const TextStyle(fontSize: 28)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Slider(
+                value: value,
+                min: 1,
+                max: 5,
+                divisions: 4,
+                label: value.round().toString(),
+                onChanged: onChanged,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final noiseRounded = _noise.round().clamp(1, 5);
+
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.only(
@@ -98,7 +172,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Leave a review',
+                  _isEdit ? 'Edit review' : 'Leave a review',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 IconButton(
@@ -112,63 +186,37 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
               widget.space.name,
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            const SizedBox(height: 20),
+            _ratingSlider(
+              title: 'Noise level',
+              subtitle:
+                  '1 = silent, 2 = quiet, 3 = moderate/calm, 4 = loud, 5 = very loud. '
+                  'Current: ${noiseLevelLabel(noiseRounded)}',
+              value: _noise,
+              onChanged: (v) => setState(() => _noise = v),
+            ),
             const SizedBox(height: 16),
-            Text(
-              'How was it?',
-              style: Theme.of(context).textTheme.bodyLarge,
+            _ratingSlider(
+              title: 'Comfort',
+              subtitle: 'Seating, temperature, and how pleasant it is to work there (1–5).',
+              value: _comfort,
+              onChanged: (v) => setState(() => _comfort = v),
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _emojiFor(_rating),
-                  style: const TextStyle(fontSize: 32),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Slider(
-                    value: _rating,
-                    min: 1,
-                    max: 5,
-                    divisions: 4,
-                    label: _rating.round().toString(),
-                    onChanged: (value) {
-                      setState(() => _rating = value);
-                    },
-                  ),
-                ),
-              ],
+            const SizedBox(height: 16),
+            _ratingSlider(
+              title: 'Crowd level',
+              subtitle: 'How busy or crowded it felt (1 = sparse, 5 = packed).',
+              value: _crowd,
+              onChanged: (v) => setState(() => _crowd = v),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Noise level',
-              style: Theme.of(context).textTheme.bodyLarge,
+            const SizedBox(height: 16),
+            _ratingSlider(
+              title: 'Ease of access',
+              subtitle: 'How easy it was to get to and use the space (1–5).',
+              value: _access,
+              onChanged: (v) => setState(() => _access = v),
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _emojiFor(_vibe),
-                  style: const TextStyle(fontSize: 32),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Slider(
-                    value: _vibe,
-                    min: 1,
-                    max: 5,
-                    divisions: 4,
-                    label: _vibe.round().toString(),
-                    onChanged: (value) {
-                      setState(() => _vibe = value);
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             TextField(
               controller: _commentController,
               decoration: const InputDecoration(
@@ -181,8 +229,8 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _submitReview,
-                child: const Text('Submit review'),
+                onPressed: _submit,
+                child: Text(_isEdit ? 'Save changes' : 'Submit review'),
               ),
             ),
             const SizedBox(height: 8),

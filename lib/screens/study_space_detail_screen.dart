@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
 import 'package:cmpe_137_study_space/widgets/review_modal_content.dart';
+import 'package:cmpe_137_study_space/widgets/space_reviews_section.dart';
 
 /// Passed via [GoRouter] `extra` when opening [StudySpaceDetailScreen].
 class StudySpaceDetailArgs {
@@ -194,6 +195,18 @@ class StudySpaceDetailScreen extends StatelessWidget {
                               ),
                             ),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Reviews',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SpaceReviewsSection(
+                    space: space,
+                    onReviewsMutated: onReviewSubmitted,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
