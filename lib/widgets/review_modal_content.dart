@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/review.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
+import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/services/review_service.dart';
 import 'package:cmpe_137_study_space/services/study_space_reviews_repository.dart';
 import 'package:cmpe_137_study_space/utils/review_rating_labels.dart';
@@ -81,6 +82,9 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
           easeOfAccess: access,
           comment: comment,
         );
+        if (mounted) {
+          await AuthScope.of(context).incrementReviewCount();
+        }
       }
 
       if (mounted) {

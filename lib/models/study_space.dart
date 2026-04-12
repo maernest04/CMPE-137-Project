@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class StudySpace {
   final String id;
   final String name;
@@ -21,6 +23,43 @@ class StudySpace {
     required this.rating,
     this.description,
   });
+
+  /// Maps stored average noise (1–5 scale) to list filter labels.
+  static String mapNoiseLevelAvgToLabel(dynamic value) {
+    final noise = ((value ?? 0) as num).toDouble();
+    if (noise <= 2) return 'Quiet';
+    if (noise <= 3.5) return 'Moderate';
+    return 'Loud';
+  }
+
+  factory StudySpace.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    if (data == null) {
+      return StudySpace(
+        id: doc.id,
+        name: 'Unknown space',
+        building: '',
+        noiseLevel: 'Moderate',
+        hasOutlets: false,
+        latitude: 0,
+        longitude: 0,
+        rating: 0,
+      );
+    }
+    return StudySpace(
+      id: doc.id,
+      name: data['name'] ?? '',
+      building: data['buildingName'] ?? '',
+      noiseLevel: mapNoiseLevelAvgToLabel(data['noiseLevelAvg']),
+      hasOutlets: data['hasPowerOutlets'] ?? false,
+      latitude: 0.0,
+      longitude: 0.0,
+      rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
+      description: data['description'] is String
+          ? data['description'] as String
+          : null,
+    );
+  }
 }
 
 // Mock Data for the UI team to build components against

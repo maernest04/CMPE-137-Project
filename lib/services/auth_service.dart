@@ -40,7 +40,7 @@ class AuthService extends ChangeNotifier {
       if (doc.exists) {
         _displayName = doc['displayName'] ?? '';
         _major = doc['major'] ?? 'Undeclared';
-        _reviewCount = doc['reviewCount'] ?? 0;
+        _reviewCount = (doc['reviewCount'] as num?)?.toInt() ?? 0;
       } else {
         _displayName = _currentUser?.email?.split('@').first ?? '';
         _major = 'Undeclared';
@@ -163,18 +163,43 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Records that the user left a review.
-  Future<void> addReview() async {
+  /// Reloads display name, major, and review count from Firestore.
+  Future<void> refreshUserProfileFromServer() async {
     if (_currentUser == null) return;
+    await _loadUserData(_currentUser!.uid);
+  }
 
+  /// Call after a new study-space review is successfully created.
+  Future<void> incrementReviewCount() async {
+    if (_currentUser == null) return;
     try {
-      _reviewCount += 1;
-      await _firestore.collection('users').doc(_currentUser!.uid).update({
-        'reviewCount': _reviewCount,
-      });
-      notifyListeners();
+      await _firestore.collection('users').doc(_currentUser!.uid).set(
+        {'reviewCount': FieldValue.increment(1)},
+        SetOptions(merge: true),
+      );
+      await _loadUserData(_currentUser!.uid);
     } catch (e) {
-      _reviewCount -= 1; // Revert on error
+      _error = 'Failed to update review count: $e';
+      notifyListeners();
+    }
+  }
+
+  /// Call after the user deletes one of their reviews.
+  Future<void> decrementReviewCount() async {
+    if (_currentUser == null) return;
+    try {
+      final ref = _firestore.collection('users').doc(_currentUser!.uid);
+      await _firestore.runTransaction((tx) async {
+        final snap = await tx.get(ref);
+        final n = (snap.data()?['reviewCount'] as num?)?.toInt() ?? 0;
+        tx.set(
+          ref,
+          {'reviewCount': (n - 1).clamp(0, 1 << 20)},
+          SetOptions(merge: true),
+        );
+      });
+      await _loadUserData(_currentUser!.uid);
+    } catch (e) {
       _error = 'Failed to update review count: $e';
       notifyListeners();
     }

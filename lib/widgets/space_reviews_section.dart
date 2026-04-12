@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/review.dart';
+import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/services/study_space_reviews_repository.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
@@ -99,6 +100,9 @@ class _SpaceReviewsSectionState extends State<SpaceReviewsSection> {
         spaceId: widget.space.id,
         reviewId: review.id,
       );
+      if (mounted) {
+        await AuthScope.of(context).decrementReviewCount();
+      }
       if (widget.onReviewsMutated != null) {
         await widget.onReviewsMutated!();
       }
