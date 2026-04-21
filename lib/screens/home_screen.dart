@@ -25,34 +25,12 @@ class _HomeScreenState extends State<HomeScreen> {
     loadSpaces();
   }
 
-  String _mapNoiseLevel(dynamic value) {
-  final noise = ((value ?? 0) as num).toDouble();
-
-  if (noise <= 2) return 'Quiet';
-  if (noise <= 3.5) return 'Moderate';
-  return 'Loud';
-  }
-
 Future<void> loadSpaces() async {
   try {
     final snapshot =
         await FirebaseFirestore.instance.collection('spaces').get();
 
-    final spaces = snapshot.docs.map((doc) {
-      final data = doc.data();
-
-    return StudySpace(
-      id: doc.id,
-      name: data['name'] ?? '',
-      building: data['buildingName'] ?? '',  // ✅ FIXED
-      noiseLevel: _mapNoiseLevel(data['noiseLevelAvg']),
-      hasOutlets: data['hasPowerOutlets'] ?? false,
-      latitude: 0.0,   // temporary placeholder
-      longitude: 0.0,  // temporary placeholder
-      rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
-    );
-
-    }).toList();
+    final spaces = snapshot.docs.map(StudySpace.fromFirestore).toList();
 
     setState(() {
       _spaces = spaces;
