@@ -66,12 +66,12 @@ class StudySpace {
 final List<StudySpace> mockStudySpaces = [
   StudySpace(
     id: '1',
-    name: 'MLK Library 4th Floor',
+    name: 'MLK Library',
     building: 'Dr. Martin Luther King Jr. Library',
     noiseLevel: 'Quiet',
     hasOutlets: true,
-    latitude: 37.3355,
-    longitude: -121.8850,
+    latitude: 37.33584281843284,
+    longitude: -121.8850228166373,
     rating: 4.8,
     description:
         'Dedicated quiet floor with long tables, good lighting, and reliable '
