@@ -32,6 +32,26 @@ class StudySpace {
     return 'Loud';
   }
 
+  /// Reads map position from a `spaces` document: numeric `latitude` /
+  /// `longitude`, or a Firestore [GeoPoint] field `location` if numbers are absent.
+  static ({double latitude, double longitude}) coordinatesFromFirestoreMap(
+    Map<String, dynamic> data,
+  ) {
+    double latitude = 0;
+    double longitude = 0;
+    final latRaw = data['latitude'];
+    final lngRaw = data['longitude'];
+    if (latRaw is num) latitude = latRaw.toDouble();
+    if (lngRaw is num) longitude = lngRaw.toDouble();
+
+    final loc = data['location'];
+    if (latitude == 0 && longitude == 0 && loc is GeoPoint) {
+      latitude = loc.latitude;
+      longitude = loc.longitude;
+    }
+    return (latitude: latitude, longitude: longitude);
+  }
+
   factory StudySpace.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     if (data == null) {
@@ -46,14 +66,15 @@ class StudySpace {
         rating: 0,
       );
     }
+    final coords = coordinatesFromFirestoreMap(data);
     return StudySpace(
       id: doc.id,
       name: data['name'] ?? '',
       building: data['buildingName'] ?? '',
       noiseLevel: mapNoiseLevelAvgToLabel(data['noiseLevelAvg']),
       hasOutlets: data['hasPowerOutlets'] ?? false,
-      latitude: 0.0,
-      longitude: 0.0,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
       description: data['description'] is String
           ? data['description'] as String

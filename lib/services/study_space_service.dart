@@ -14,12 +14,7 @@ class StudySpaceService {
   }
 
   StudySpace studySpaceFromFirestore(String id, Map<String, dynamic> data) {
-    double latitude = 0;
-    double longitude = 0;
-    final latRaw = data['latitude'];
-    final lngRaw = data['longitude'];
-    if (latRaw is num) latitude = latRaw.toDouble();
-    if (lngRaw is num) longitude = lngRaw.toDouble();
+    final coords = StudySpace.coordinatesFromFirestoreMap(data);
 
     return StudySpace(
       id: id,
@@ -27,8 +22,8 @@ class StudySpaceService {
       building: data['buildingName'] ?? '',
       noiseLevel: mapNoiseLevel(data['noiseLevelAvg']),
       hasOutlets: data['hasPowerOutlets'] ?? false,
-      latitude: latitude,
-      longitude: longitude,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
     );
   }
