@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:go_router/go_router.dart';
 import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/services/auth_service.dart';
+import 'package:cmpe_137_study_space/widgets/profile_my_reviews_section.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -111,10 +112,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return name.isNotEmpty ? name[0].toUpperCase() : '?';
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
       children: [
-        const SizedBox(height: 40),
+        const SizedBox(height: 24),
         CircleAvatar(
           radius: 50,
           backgroundColor: Theme.of(context).colorScheme.primary,
@@ -177,13 +177,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
+        Text(
+          'Your reviews',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 8),
+        const ProfileMyReviewsSection(),
+        const SizedBox(height: 24),
         ElevatedButton.icon(
           icon: const Icon(Icons.logout),
           label: const Text('Sign Out'),
-          onPressed: () {
-            authScope.signOut();
-            _showMessage('Signed out.');
+          onPressed: () async {
+            try {
+              await authScope.signOut();
+              if (mounted) {
+                context.go('/login');
+              }
+            } catch (e) {
+              _showMessage('Error signing out: $e');
+            }
           },
         ),
         const SizedBox(height: 16),
@@ -191,6 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'Tip: Use the filters on the Home tab to narrow down study spaces.',
           textAlign: TextAlign.center,
         ),
+        const SizedBox(height: 24),
       ],
     );
   }

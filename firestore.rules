@@ -8,24 +8,22 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Spaces: anyone can read, authenticated users can create
+    // Spaces: anyone can read, authenticated users can create/update
     match /spaces/{spaceId} {
       allow read: if true;
       allow create: if request.auth != null;
-      allow update, delete: if false; // No client updates/deletes to spaces
+      allow update: if request.auth != null;
+      allow delete: if false;
 
       // Reviews under each space
       match /reviews/{reviewId} {
-        // Anyone can read reviews
         allow read: if true;
-        
-        // Authenticated users can create reviews
-        allow create: if request.auth != null && 
-                         request.resource.data.userId == request.auth.uid;
-        
-        // Users can edit/delete only their own reviews
-        allow update, delete: if request.auth != null && 
-                                 resource.data.userId == request.auth.uid;
+
+        allow create: if request.auth != null &&
+                      request.resource.data.userId == request.auth.uid;
+
+        allow update, delete: if request.auth != null &&
+                              resource.data.userId == request.auth.uid;
       }
     }
   }

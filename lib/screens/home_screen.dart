@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
+import 'package:cmpe_137_study_space/services/study_space_service.dart';
 import 'package:cmpe_137_study_space/widgets/study_space_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,8 +14,34 @@ class _HomeScreenState extends State<HomeScreen> {
   final Set<String> _selectedNoiseLevels = {};
   bool _filterOutlets = false;
 
+  List<StudySpace> _spaces = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    loadSpaces();
+  }
+
+  Future<void> loadSpaces() async {
+    try {
+      final spaces = await StudySpaceService.instance.fetchStudySpaces();
+      setState(() {
+        _spaces = spaces;
+        _isLoading = false;
+        _errorMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
   List<StudySpace> get _filteredSpaces {
-    return mockStudySpaces.where((space) {
+    return _spaces.where((space) {
       if (_selectedNoiseLevels.isNotEmpty &&
           !_selectedNoiseLevels.contains(space.noiseLevel)) {
         return false;
@@ -139,6 +166,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final filteredSpaces = _filteredSpaces;
 
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Text('Error loading spaces: $_errorMessage'),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Discover Spaces'),
@@ -178,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+
           Expanded(
             child: filteredSpaces.isEmpty
                 ? Center(
@@ -191,7 +233,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: filteredSpaces.length,
                     itemBuilder: (context, index) {
                       final space = filteredSpaces[index];
-                      return StudySpaceCard(space: space);
+                      return StudySpaceCard(
+                        space: space,
+                        onReviewSubmitted: loadSpaces,
+                      );
                     },
                   ),
           ),
