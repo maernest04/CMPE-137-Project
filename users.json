@@ -1,0 +1,44 @@
+{"users": [
+{
+  "localId": "Npmpva6c0GNdcAkjkdTpYUEjKMy1",
+  "email": "maernest04@gmail.com",
+  "emailVerified": false,
+  "passwordHash": "Lty04oxMIN16AqVJ2Y42/d2ve1rG3nWwqPOkW8Mc90WQc0Hspcfjhsv/EhW3WZsHKOE/Wmi/w/hOGKAF+/o5OA==",
+  "salt": "FdSTHcW91CMmlQ==",
+  "displayName": "Ernest",
+  "lastSignedInAt": "1775621836235",
+  "createdAt": "1775587265084",
+  "providerUserInfo": []
+},
+{
+  "localId": "QBpHH8CxAtXGeBQWLqMcc7DNzSp1",
+  "lastSignedInAt": "1774125144419",
+  "createdAt": "1774125144419"
+},
+{
+  "localId": "YXR59uBqTpdPAKCiBT5mSJazXd83",
+  "email": "colin.oliva@sjsu.edu",
+  "emailVerified": false,
+  "passwordHash": "IynFD25VICY2PJHrcbOzYjINVTqHsTh4y0ruyxlSiICbekb+mZNGj3Zu9layB5fO5PeKjuMKp9WXB6aKDsN8bA==",
+  "salt": "EDvBgvOM9VuYzw==",
+  "displayName": "Colin Oliva",
+  "lastSignedInAt": "1775964361160",
+  "createdAt": "1775887147236",
+  "providerUserInfo": []
+},
+{
+  "localId": "rgOY8L5umPd6KTd1hAKBY2IDAnb2",
+  "lastSignedInAt": "1774125144485",
+  "createdAt": "1774125144485"
+},
+{
+  "localId": "vSnUeIK4wwZg8WBmebiiU8lHoBl1",
+  "email": "paulbrandon.estigoy@sjsu.edu",
+  "emailVerified": false,
+  "passwordHash": "5qCzalu3wqUSHJO+LOxLwvObxmZ69OK5ZyM+BILkf+42liR7rtAPvtcNQ2i/yln0YD7FibpILTCW7EU8OpGbjg==",
+  "salt": "LvQIX6CJTJgxZw==",
+  "displayName": "Brannflakess",
+  "lastSignedInAt": "1774731574652",
+  "createdAt": "1774730940549",
+  "providerUserInfo": []
+}]}

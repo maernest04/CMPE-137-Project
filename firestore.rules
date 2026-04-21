@@ -3,26 +3,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Reviews: clients may update/delete only their own document (create via Cloud Function).
-    match /spaces/{spaceId}/reviews/{reviewId} {
-      allow read: if request.time < timestamp.date(2026, 4, 19);
-      allow create: if false;
-      allow update, delete: if request.time < timestamp.date(2026, 4, 19)
-        && request.auth != null
-        && request.auth.uid == resource.data.userId;
+    // Users can read and write their own user data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 4, 19);
+    // Spaces are readable by everyone
+    match /spaces/{spaceId} {
+      allow read: if true;
+      // Allow authenticated users to create/update spaces if needed
+      allow write: if request.auth != null;
+    }
+
+    // Reviews are readable by everyone, but writes are handled by Cloud Functions
+    match /spaces/{spaceId}/reviews/{reviewId} {
+      allow read: if true;
+      allow write: if false; // Deny client writes to prevent unauthorized access
     }
   }
 }
