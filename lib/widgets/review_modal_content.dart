@@ -49,9 +49,23 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
     super.dispose();
   }
 
-  String _emojiFor(double value) {
+  String _faceEmojiFor(double value) {
     final index = value.clamp(1, 5).round() - 1;
     const emojis = ['😡', '😕', '😐', '🙂', '😄'];
+    return emojis[index];
+  }
+
+  /// 1 = silent … 5 = very loud (speaker / volume metaphors).
+  String _noiseEmojiFor(double value) {
+    final index = value.clamp(1, 5).round() - 1;
+    const emojis = ['🔇', '🔈', '🔉', '🔊', '📢'];
+    return emojis[index];
+  }
+
+  /// 1 = sparse … 5 = packed (people density).
+  String _crowdEmojiFor(double value) {
+    final index = value.clamp(1, 5).round() - 1;
+    const emojis = ['🧍', '👥', '🧑‍🤝‍🧑', '👨‍👩‍👧', '🏟️'];
     return emojis[index];
   }
 
@@ -124,7 +138,9 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
     required String subtitle,
     required double value,
     required ValueChanged<double> onChanged,
+    String Function(double)? emojiFor,
   }) {
+    final emoji = emojiFor ?? _faceEmojiFor;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -138,7 +154,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Text(_emojiFor(value), style: const TextStyle(fontSize: 28)),
+            Text(emoji(value), style: const TextStyle(fontSize: 28)),
             const SizedBox(width: 8),
             Expanded(
               child: Slider(
@@ -198,6 +214,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
                   'Current: ${noiseLevelLabel(noiseRounded)}',
               value: _noise,
               onChanged: (v) => setState(() => _noise = v),
+              emojiFor: _noiseEmojiFor,
             ),
             const SizedBox(height: 16),
             _ratingSlider(
@@ -212,6 +229,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
               subtitle: 'How busy or crowded it felt (1 = sparse, 5 = packed).',
               value: _crowd,
               onChanged: (v) => setState(() => _crowd = v),
+              emojiFor: _crowdEmojiFor,
             ),
             const SizedBox(height: 16),
             _ratingSlider(
