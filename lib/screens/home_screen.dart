@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
+import 'package:cmpe_137_study_space/services/study_space_service.dart';
 import 'package:cmpe_137_study_space/widgets/study_space_card.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,24 +24,21 @@ class _HomeScreenState extends State<HomeScreen> {
     loadSpaces();
   }
 
-Future<void> loadSpaces() async {
-  try {
-    final snapshot =
-        await FirebaseFirestore.instance.collection('spaces').get();
-
-    final spaces = snapshot.docs.map(StudySpace.fromFirestore).toList();
-
-    setState(() {
-      _spaces = spaces;
-      _isLoading = false;
-    });
-  } catch (e) {
-    setState(() {
-      _errorMessage = e.toString();
-      _isLoading = false;
-    });
+  Future<void> loadSpaces() async {
+    try {
+      final spaces = await StudySpaceService.instance.fetchStudySpaces();
+      setState(() {
+        _spaces = spaces;
+        _isLoading = false;
+        _errorMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
   }
-}
 
   List<StudySpace> get _filteredSpaces {
     return _spaces.where((space) {

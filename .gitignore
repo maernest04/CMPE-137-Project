@@ -10,6 +10,7 @@
 .svn/
 .vscode/
 android/app/google-services.json
+android/local.properties
 
 # IntelliJ related
 *.iml
@@ -25,6 +26,7 @@ android/app/google-services.json
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
+ios/Flutter/Secrets.xcconfig
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
