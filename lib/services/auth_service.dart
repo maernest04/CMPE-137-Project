@@ -11,6 +11,7 @@ class AuthService extends ChangeNotifier {
   String? _displayName;
   String? _major;
   int _reviewCount = 0;
+  List<String> _savedSpaces = [];
   bool _isLoading = false;
   String? _error;
 
@@ -28,6 +29,7 @@ class AuthService extends ChangeNotifier {
         _displayName = null;
         _major = null;
         _reviewCount = 0;
+        _savedSpaces = [];
       }
       notifyListeners();
     });
@@ -41,10 +43,12 @@ class AuthService extends ChangeNotifier {
         _displayName = doc['displayName'] ?? '';
         _major = doc['major'] ?? 'Undeclared';
         _reviewCount = (doc['reviewCount'] as num?)?.toInt() ?? 0;
+        _savedSpaces = List<String>.from(doc['savedSpaces'] ?? []);
       } else {
         _displayName = _currentUser?.email?.split('@').first ?? '';
         _major = 'Undeclared';
         _reviewCount = 0;
+        _savedSpaces = [];
       }
     } catch (e) {
       _error = 'Failed to load user data: $e';
@@ -56,6 +60,9 @@ class AuthService extends ChangeNotifier {
   /// The currently signed in user email, or null if not signed in.
   String? get userEmail => _currentUser?.email;
 
+  /// The currently signed in user ID, or null if not signed in.
+  String? get uid => _currentUser?.uid;
+
   /// The name the user entered when registering.
   String? get displayName => _displayName;
 
@@ -64,6 +71,9 @@ class AuthService extends ChangeNotifier {
 
   /// Number of reviews the user has submitted.
   int get reviewCount => _reviewCount;
+
+  /// IDs of study spaces the user has saved.
+  List<String> get savedSpaces => _savedSpaces;
 
   /// Whether a user is signed in.
   bool get isSignedIn => _currentUser != null;
@@ -129,6 +139,7 @@ class AuthService extends ChangeNotifier {
         'displayName': displayName,
         'major': major,
         'reviewCount': 0,
+        'savedSpaces': [],
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -201,6 +212,31 @@ class AuthService extends ChangeNotifier {
       await _loadUserData(_currentUser!.uid);
     } catch (e) {
       _error = 'Failed to update review count: $e';
+      notifyListeners();
+    }
+  }
+
+  /// Toggles saving a study space for the user.
+  Future<void> toggleSavedSpace(String spaceId) async {
+    if (_currentUser == null) return;
+    try {
+      final isSaved = _savedSpaces.contains(spaceId);
+      final ref = _firestore.collection('users').doc(_currentUser!.uid);
+      
+      if (isSaved) {
+        _savedSpaces.remove(spaceId);
+        await ref.update({
+          'savedSpaces': FieldValue.arrayRemove([spaceId])
+        });
+      } else {
+        _savedSpaces.add(spaceId);
+        await ref.update({
+          'savedSpaces': FieldValue.arrayUnion([spaceId])
+        });
+      }
+      notifyListeners();
+    } catch (e) {
+      _error = 'Failed to toggle saved space: $e';
       notifyListeners();
     }
   }

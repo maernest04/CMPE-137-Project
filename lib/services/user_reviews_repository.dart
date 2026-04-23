@@ -29,19 +29,30 @@ class UserReviewsRepository {
   final FirebaseFirestore _firestore;
 
   /// All reviews authored by [userId] across every study space.
-  Stream<List<UserReviewEntry>> watchReviewsForUser(String userId) {
-    return _firestore
-        .collectionGroup('reviews')
-        .where('userId', isEqualTo: userId)
-        .snapshots()
-        .map((snapshot) {
-          final list = snapshot.docs.map(UserReviewEntry.fromDocument).toList();
-          list.sort((a, b) {
-            final ta = a.review.createdAt?.millisecondsSinceEpoch ?? 0;
-            final tb = b.review.createdAt?.millisecondsSinceEpoch ?? 0;
-            return tb.compareTo(ta);
-          });
-          return list;
-        });
+  Stream<List<UserReviewEntry>> watchReviewsForUser(String userId) async* {
+    try {
+      final spacesSnap = await _firestore.collection('spaces').get();
+      List<UserReviewEntry> allReviews = [];
+
+      for (final spaceDoc in spacesSnap.docs) {
+        final reviewsSnap = await spaceDoc.reference
+            .collection('reviews')
+            .where('userId', isEqualTo: userId)
+            .get();
+        for (final reviewDoc in reviewsSnap.docs) {
+          allReviews.add(UserReviewEntry.fromDocument(reviewDoc));
+        }
+      }
+
+      allReviews.sort((a, b) {
+        final ta = a.review.createdAt?.millisecondsSinceEpoch ?? 0;
+        final tb = b.review.createdAt?.millisecondsSinceEpoch ?? 0;
+        return tb.compareTo(ta);
+      });
+
+      yield allReviews;
+    } catch (e) {
+      yield [];
+    }
   }
 }

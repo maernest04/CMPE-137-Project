@@ -40,6 +40,8 @@ class StudySpaceService {
       latitude: coords.latitude,
       longitude: coords.longitude,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
+      createdBy: data['createdBy'] ?? '',
+      address: data['address'] ?? '',
       description: data['description'] is String
           ? data['description'] as String
           : null,
@@ -60,6 +62,7 @@ class StudySpaceService {
     required bool hasOutlets,
     required double latitude,
     required double longitude,
+    required String address,
     String? description,
   }) async {
     final currentUser = _auth.currentUser;
@@ -74,6 +77,7 @@ class StudySpaceService {
       'hasPowerOutlets': hasOutlets,
       'latitude': latitude,
       'longitude': longitude,
+      'address': address.trim(),
       'overallAvg': 0,
       'reviewCount': 0,
       'createdBy': currentUser.uid,
@@ -97,7 +101,29 @@ class StudySpaceService {
       latitude: latitude,
       longitude: longitude,
       rating: 0,
+      createdBy: currentUser.uid,
+      address: address.trim(),
       description: trimmedDescription,
     );
+  }
+
+  Future<void> deleteStudySpace(String spaceId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw StateError('You must be signed in to delete a study space.');
+    }
+    
+    final docRef = _firestore.collection('spaces').doc(spaceId);
+    final doc = await docRef.get();
+    
+    if (!doc.exists) {
+      throw StateError('Study space does not exist.');
+    }
+    
+    if (doc.data()?['createdBy'] != currentUser.uid) {
+      throw StateError('You can only delete study spaces you created.');
+    }
+    
+    await docRef.delete();
   }
 }

@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class StudySpace {
@@ -9,6 +10,8 @@ class StudySpace {
   final double latitude;
   final double longitude;
   final double rating;
+  final String address;
+  final String createdBy;
   /// Optional longer description from Firestore or mock data.
   final String? description;
 
@@ -21,6 +24,8 @@ class StudySpace {
     required this.latitude,
     required this.longitude,
     required this.rating,
+    required this.createdBy,
+    this.address = '',
     this.description,
   });
 
@@ -64,6 +69,7 @@ class StudySpace {
         latitude: 0,
         longitude: 0,
         rating: 0,
+        createdBy: '',
       );
     }
     final coords = coordinatesFromFirestoreMap(data);
@@ -76,6 +82,8 @@ class StudySpace {
       latitude: coords.latitude,
       longitude: coords.longitude,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
+      createdBy: data['createdBy'] ?? '',
+      address: data['address'] ?? '',
       description: data['description'] is String
           ? data['description'] as String
           : null,
@@ -94,6 +102,7 @@ final List<StudySpace> mockStudySpaces = [
     latitude: 37.33584281843284,
     longitude: -121.8850228166373,
     rating: 4.8,
+    createdBy: '',
     description:
         'Dedicated quiet floor with long tables, good lighting, and reliable '
         'Wi‑Fi. Popular during finals—arrive early for a seat near outlets.',
@@ -107,6 +116,7 @@ final List<StudySpace> mockStudySpaces = [
     latitude: 37.3360,
     longitude: -121.8814,
     rating: 3.9,
+    createdBy: '',
     description:
         'High-energy spot with food nearby. Better for group work or casual '
         'reading than deep focus sessions.',
@@ -120,6 +130,7 @@ final List<StudySpace> mockStudySpaces = [
     latitude: 37.3340,
     longitude: -121.8805,
     rating: 4.5,
+    createdBy: '',
     description:
         'Comfortable seating between classes. Foot traffic picks up midday; '
         'mornings are usually calmer.',

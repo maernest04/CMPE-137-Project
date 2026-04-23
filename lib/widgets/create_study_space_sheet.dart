@@ -3,14 +3,10 @@ import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
 
 class CreateStudySpaceSheet extends StatefulWidget {
-  final double initialLatitude;
-  final double initialLongitude;
   final ValueChanged<StudySpace>? onCreated;
-
+  
   const CreateStudySpaceSheet({
     super.key,
-    required this.initialLatitude,
-    required this.initialLongitude,
     this.onCreated,
   });
 
@@ -25,8 +21,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
   final _nameController = TextEditingController();
   final _buildingController = TextEditingController();
   final _descriptionController = TextEditingController();
-  late final TextEditingController _latitudeController;
-  late final TextEditingController _longitudeController;
+  final _addressController = TextEditingController();
 
   String _selectedNoiseLevel = 'Moderate';
   bool _hasOutlets = true;
@@ -35,12 +30,6 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
   @override
   void initState() {
     super.initState();
-    _latitudeController = TextEditingController(
-      text: widget.initialLatitude.toStringAsFixed(6),
-    );
-    _longitudeController = TextEditingController(
-      text: widget.initialLongitude.toStringAsFixed(6),
-    );
   }
 
   @override
@@ -48,22 +37,12 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     _nameController.dispose();
     _buildingController.dispose();
     _descriptionController.dispose();
-    _latitudeController.dispose();
-    _longitudeController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final latitude = double.tryParse(_latitudeController.text.trim());
-    final longitude = double.tryParse(_longitudeController.text.trim());
-    if (latitude == null || longitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter valid coordinates for the study space.')),
-      );
       return;
     }
 
@@ -75,8 +54,9 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
         building: _buildingController.text,
         noiseLevel: _selectedNoiseLevel,
         hasOutlets: _hasOutlets,
-        latitude: latitude,
-        longitude: longitude,
+        latitude: 0.0,
+        longitude: 0.0,
+        address: _addressController.text,
         description: _descriptionController.text,
       );
 
@@ -102,15 +82,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     return null;
   }
 
-  String? _coordinateValidator(String? value, String label) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Enter a $label value';
-    }
-    if (double.tryParse(value.trim()) == null) {
-      return '$label must be a valid number';
-    }
-    return null;
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +130,17 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                       _requiredValidator(value, 'Enter the building name'),
                 ),
                 const SizedBox(height: 12),
+                TextFormField(
+                  controller: _addressController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Address',
+                    hintText: '1 Washington Sq',
+                  ),
+                  validator: (value) =>
+                      _requiredValidator(value, 'Enter the address'),
+                ),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedNoiseLevel,
                   decoration: const InputDecoration(labelText: 'Noise level'),
@@ -192,34 +175,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                     hintText: 'What makes this a good study spot?',
                   ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _latitudeController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          signed: true,
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(labelText: 'Latitude'),
-                        validator: (value) => _coordinateValidator(value, 'Latitude'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _longitudeController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          signed: true,
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(labelText: 'Longitude'),
-                        validator: (value) => _coordinateValidator(value, 'Longitude'),
-                      ),
-                    ),
-                  ],
-                ),
+
                 const SizedBox(height: 20),
                 FilledButton.icon(
                   onPressed: _isSubmitting ? null : _submit,
