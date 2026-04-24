@@ -11,6 +11,8 @@ class StudySpace {
   final double rating;
   /// Optional longer description from Firestore or mock data.
   final String? description;
+  /// Optional image URL from Firebase Storage.
+  final String? imageUrl;
 
   StudySpace({
     required this.id,
@@ -22,7 +24,34 @@ class StudySpace {
     required this.longitude,
     required this.rating,
     this.description,
+    this.imageUrl,
   });
+
+  StudySpace copyWith({
+    String? id,
+    String? name,
+    String? building,
+    String? noiseLevel,
+    bool? hasOutlets,
+    double? latitude,
+    double? longitude,
+    double? rating,
+    String? description,
+    String? imageUrl,
+  }) {
+    return StudySpace(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      building: building ?? this.building,
+      noiseLevel: noiseLevel ?? this.noiseLevel,
+      hasOutlets: hasOutlets ?? this.hasOutlets,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      rating: rating ?? this.rating,
+      description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
 
   /// Maps stored average noise (1–5 scale) to list filter labels.
   static String mapNoiseLevelAvgToLabel(dynamic value) {
@@ -58,6 +87,7 @@ class StudySpace {
       description: data['description'] is String
           ? data['description'] as String
           : null,
+      imageUrl: data['imageUrl'] is String ? data['imageUrl'] as String : null,
     );
   }
 }

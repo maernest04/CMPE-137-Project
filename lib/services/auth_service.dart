@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,6 +17,10 @@ class AuthService extends ChangeNotifier {
   String? _error;
 
   AuthService() {
+    _currentUser = _firebaseAuth.currentUser;
+    if (_currentUser != null) {
+      unawaited(_loadUserData(_currentUser!.uid));
+    }
     _initializeAuthListener();
   }
 
@@ -54,7 +60,7 @@ class AuthService extends ChangeNotifier {
   }
 
   /// The currently signed in user email, or null if not signed in.
-  String? get userEmail => _currentUser?.email;
+  String? get userEmail => _firebaseAuth.currentUser?.email;
 
   /// The name the user entered when registering.
   String? get displayName => _displayName;
@@ -66,7 +72,7 @@ class AuthService extends ChangeNotifier {
   int get reviewCount => _reviewCount;
 
   /// Whether a user is signed in.
-  bool get isSignedIn => _currentUser != null;
+  bool get isSignedIn => _firebaseAuth.currentUser != null;
 
   /// Whether an async operation is in progress.
   bool get isLoading => _isLoading;
@@ -87,10 +93,17 @@ class AuthService extends ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      await _firebaseAuth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+      final credential = await _firebaseAuth
+          .signInWithEmailAndPassword(
+            email: email.trim(),
+            password: password,
+          )
+          .timeout(const Duration(seconds: 15));
+      _currentUser = credential.user;
+    } on TimeoutException {
+      _error =
+          'Sign in timed out. Please check your connection and try again.';
+      rethrow;
     } on FirebaseAuthException catch (e) {
       _error = _getErrorMessage(e.code);
       rethrow;
@@ -119,6 +132,7 @@ class AuthService extends ChangeNotifier {
         email: email.trim(),
         password: password,
       );
+      _currentUser = userCredential.user;
 
       // Update display name in Firebase Auth
       await userCredential.user?.updateDisplayName(displayName);

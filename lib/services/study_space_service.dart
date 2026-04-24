@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 
 class StudySpaceService {
@@ -8,6 +11,7 @@ class StudySpaceService {
   static final StudySpaceService instance = StudySpaceService._();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   String mapNoiseLevel(dynamic value) {
     final noise = ((value ?? 0) as num).toDouble();
@@ -48,6 +52,7 @@ class StudySpaceService {
       description: data['description'] is String
           ? data['description'] as String
           : null,
+      imageUrl: data['imageUrl'] is String ? data['imageUrl'] as String : null,
     );
   }
 
@@ -58,6 +63,24 @@ class StudySpaceService {
         .toList();
   }
 
+  Future<String> uploadStudySpaceImage(String spaceId, String imagePath) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw StateError('You must be signed in to upload an image.');
+    }
+
+    final ref = _storage.ref().child('study_spaces/$spaceId/${DateTime.now().millisecondsSinceEpoch}.jpg');
+    await ref.putFile(File(imagePath));
+    return await ref.getDownloadURL();
+  }
+
+  Future<void> updateStudySpaceImageUrl(String spaceId, String imageUrl) async {
+    await _firestore.collection('spaces').doc(spaceId).update({
+      'imageUrl': imageUrl,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<StudySpace> createStudySpace({
     required String name,
     required String building,
@@ -66,6 +89,7 @@ class StudySpaceService {
     required double latitude,
     required double longitude,
     String? description,
+    String? imageUrl,
   }) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
@@ -91,6 +115,9 @@ class StudySpaceService {
     if (trimmedDescription != null && trimmedDescription.isNotEmpty) {
       payload['description'] = trimmedDescription;
     }
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      payload['imageUrl'] = imageUrl;
+    }
 
     final ref = await _firestore.collection('spaces').add(payload);
     return StudySpace(
@@ -103,6 +130,7 @@ class StudySpaceService {
       longitude: longitude,
       rating: 0,
       description: trimmedDescription,
+      imageUrl: imageUrl,
     );
   }
 }

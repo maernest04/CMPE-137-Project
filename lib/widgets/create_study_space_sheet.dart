@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
 
@@ -31,6 +32,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
   String _selectedNoiseLevel = 'Moderate';
   bool _hasOutlets = true;
   bool _isSubmitting = false;
+  XFile? _selectedImage;
 
   @override
   void initState() {
@@ -53,6 +55,14 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => _selectedImage = image);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -70,19 +80,52 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     setState(() => _isSubmitting = true);
 
     try {
-      final createdSpace = await StudySpaceService.instance.createStudySpace(
-        name: _nameController.text,
-        building: _buildingController.text,
-        noiseLevel: _selectedNoiseLevel,
-        hasOutlets: _hasOutlets,
-        latitude: latitude,
-        longitude: longitude,
-        description: _descriptionController.text,
-      );
+      String? imageUrl;
+      if (_selectedImage != null) {
+        // First create the space to get ID, then upload image
+        final createdSpace = await StudySpaceService.instance.createStudySpace(
+          name: _nameController.text,
+          building: _buildingController.text,
+          noiseLevel: _selectedNoiseLevel,
+          hasOutlets: _hasOutlets,
+          latitude: latitude,
+          longitude: longitude,
+          description: _descriptionController.text,
+        );
 
-      if (!mounted) return;
-      widget.onCreated?.call(createdSpace);
-      Navigator.of(context).pop(createdSpace);
+        // Upload image
+        imageUrl = await StudySpaceService.instance.uploadStudySpaceImage(
+          createdSpace.id,
+          _selectedImage!.path,
+        );
+
+        // Update with image URL
+        await StudySpaceService.instance.updateStudySpaceImageUrl(
+          createdSpace.id,
+          imageUrl,
+        );
+
+        // Return updated space
+        final updatedSpace = createdSpace.copyWith(imageUrl: imageUrl);
+        if (!mounted) return;
+        widget.onCreated?.call(updatedSpace);
+        Navigator.of(context).pop(updatedSpace);
+      } else {
+        final createdSpace = await StudySpaceService.instance.createStudySpace(
+          name: _nameController.text,
+          building: _buildingController.text,
+          noiseLevel: _selectedNoiseLevel,
+          hasOutlets: _hasOutlets,
+          latitude: latitude,
+          longitude: longitude,
+          description: _descriptionController.text,
+          imageUrl: imageUrl,
+        );
+
+        if (!mounted) return;
+        widget.onCreated?.call(createdSpace);
+        Navigator.of(context).pop(createdSpace);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -193,6 +236,26 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.image),
+                        label: const Text('Pick Image'),
+                      ),
+                    ),
+                    if (_selectedImage != null) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _selectedImage!.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 Row(
                   children: [
                     Expanded(

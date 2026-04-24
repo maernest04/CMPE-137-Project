@@ -38,6 +38,7 @@ GoRouter _buildGoRouter(AuthService authService) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
+    refreshListenable: authService,
     redirect: (context, state) {
       // Redirect to login if not authenticated, unless already going to login/register
       final isLoggedIn = authService.isSignedIn;
