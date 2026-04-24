@@ -222,36 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                // Divider
-                Row(
-                  children: [
-                    Expanded(child: Container(height: 1, color: Colors.grey[300])),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'or sign in with',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                      ),
-                    ),
-                    Expanded(child: Container(height: 1, color: Colors.grey[300])),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Social Login Placeholder
-                OutlinedButton(
-                  onPressed: null, // TODO: Implement Google Sign-In
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: BorderSide(color: Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Coming Soon: Google Sign-In'),
-                ),
-              ],
-            ),
+                ],
+              ),
           ),
         ),
       ),

@@ -82,7 +82,6 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     try {
       String? imageUrl;
       if (_selectedImage != null) {
-        // First create the space to get ID, then upload image
         final createdSpace = await StudySpaceService.instance.createStudySpace(
           name: _nameController.text,
           building: _buildingController.text,
@@ -93,19 +92,16 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
           description: _descriptionController.text,
         );
 
-        // Upload image
         imageUrl = await StudySpaceService.instance.uploadStudySpaceImage(
           createdSpace.id,
           _selectedImage!.path,
         );
 
-        // Update with image URL
         await StudySpaceService.instance.updateStudySpaceImageUrl(
           createdSpace.id,
           imageUrl,
         );
 
-        // Return updated space
         final updatedSpace = createdSpace.copyWith(imageUrl: imageUrl);
         if (!mounted) return;
         widget.onCreated?.call(updatedSpace);

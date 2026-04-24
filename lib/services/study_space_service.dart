@@ -33,12 +33,7 @@ class StudySpaceService {
   }
 
   StudySpace studySpaceFromFirestore(String id, Map<String, dynamic> data) {
-    double latitude = 0;
-    double longitude = 0;
-    final latRaw = data['latitude'];
-    final lngRaw = data['longitude'];
-    if (latRaw is num) latitude = latRaw.toDouble();
-    if (lngRaw is num) longitude = lngRaw.toDouble();
+    final coords = StudySpace.coordinatesFromFirestoreMap(data);
 
     return StudySpace(
       id: id,
@@ -46,9 +41,11 @@ class StudySpaceService {
       building: data['buildingName'] ?? '',
       noiseLevel: mapNoiseLevel(data['noiseLevelAvg']),
       hasOutlets: data['hasPowerOutlets'] ?? false,
-      latitude: latitude,
-      longitude: longitude,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
+      createdBy: data['createdBy'] ?? '',
+      address: data['address'] ?? '',
       description: data['description'] is String
           ? data['description'] as String
           : null,
@@ -88,6 +85,7 @@ class StudySpaceService {
     required bool hasOutlets,
     required double latitude,
     required double longitude,
+    required String address,
     String? description,
     String? imageUrl,
   }) async {
@@ -103,6 +101,7 @@ class StudySpaceService {
       'hasPowerOutlets': hasOutlets,
       'latitude': latitude,
       'longitude': longitude,
+      'address': address.trim(),
       'overallAvg': 0,
       'reviewCount': 0,
       'createdBy': currentUser.uid,
@@ -129,8 +128,30 @@ class StudySpaceService {
       latitude: latitude,
       longitude: longitude,
       rating: 0,
+      createdBy: currentUser.uid,
+      address: address.trim(),
       description: trimmedDescription,
       imageUrl: imageUrl,
     );
+  }
+
+  Future<void> deleteStudySpace(String spaceId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw StateError('You must be signed in to delete a study space.');
+    }
+    
+    final docRef = _firestore.collection('spaces').doc(spaceId);
+    final doc = await docRef.get();
+    
+    if (!doc.exists) {
+      throw StateError('Study space does not exist.');
+    }
+    
+    if (doc.data()?['createdBy'] != currentUser.uid) {
+      throw StateError('You can only delete study spaces you created.');
+    }
+    
+    await docRef.delete();
   }
 }

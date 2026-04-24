@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
 import 'package:cmpe_137_study_space/widgets/study_space_card.dart';
+import 'package:cmpe_137_study_space/widgets/create_study_space_sheet.dart';
+import 'package:cmpe_137_study_space/services/auth_scope.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cmpe_137_study_space/screens/study_space_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -162,6 +166,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openCreateStudySpaceSheet() async {
+    final authService = AuthScope.of(context);
+    if (!authService.isSignedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign in to create a study space.')),
+      );
+      return;
+    }
+
+    final createdSpace = await showModalBottomSheet<StudySpace>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return const CreateStudySpaceSheet();
+      },
+    );
+
+    if (!mounted || createdSpace == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${createdSpace.name} was added.')),
+    );
+
+    setState(() => _isLoading = true);
+    await loadSpaces();
+
+    if (!mounted) return;
+    context.push(
+      '/study-space/${createdSpace.id}',
+      extra: StudySpaceDetailArgs(
+        space: createdSpace,
+        onReviewSubmitted: loadSpaces,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredSpaces = _filteredSpaces;
@@ -241,6 +282,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'addSpaceBtn',
+        onPressed: _openCreateStudySpaceSheet,
+        icon: const Icon(Icons.add_business_outlined),
+        label: const Text('Add space'),
       ),
     );
   }

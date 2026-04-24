@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
 import 'package:cmpe_137_study_space/widgets/review_modal_content.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cmpe_137_study_space/widgets/space_reviews_section.dart';
+import 'package:cmpe_137_study_space/services/auth_scope.dart';
+import 'package:cmpe_137_study_space/services/study_space_service.dart';
 
 /// Passed via [GoRouter] `extra` when opening [StudySpaceDetailScreen].
 class StudySpaceDetailArgs {
@@ -41,10 +44,55 @@ class StudySpaceDetailScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Study Space?'),
+        content: const Text('Are you sure you want to delete this study space? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await StudySpaceService.instance.deleteStudySpace(space.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Study space deleted.')),
+          );
+          // If a callback was provided to refresh the parent list, call it.
+          if (onReviewSubmitted != null) {
+            await onReviewSubmitted!();
+          }
+          if (context.mounted) {
+            context.pop();
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete space: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final hasCoords = space.latitude != 0.0 || space.longitude != 0.0;
+    final hasAddress = space.address.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,6 +101,31 @@ class StudySpaceDetailScreen extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              AuthScope.of(context).savedSpaces.contains(space.id)
+                  ? Icons.bookmark
+                  : Icons.bookmark_outline,
+            ),
+            onPressed: () {
+              final authService = AuthScope.of(context);
+              if (!authService.isSignedIn) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sign in to save study spaces.')),
+                );
+                return;
+              }
+              authService.toggleSavedSpace(space.id);
+            },
+          ),
+          if (AuthScope.of(context).uid == space.createdBy && space.createdBy.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              color: Colors.red,
+              onPressed: () => _confirmDelete(context),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -189,14 +262,13 @@ class StudySpaceDetailScreen extends StatelessWidget {
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: hasCoords
+                      child: hasAddress
                           ? SelectableText(
-                              '${space.latitude.toStringAsFixed(5)}, '
-                              '${space.longitude.toStringAsFixed(5)}',
+                              space.address,
                               style: textTheme.bodyLarge,
                             )
                           : Text(
-                              'Map coordinates are not available for this '
+                              'Address is not available for this '
                               'space yet.',
                               style: textTheme.bodyMedium?.copyWith(
                                 color: Colors.grey.shade700,
