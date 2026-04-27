@@ -1,14 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
+import 'package:cmpe_137_study_space/screens/study_space_detail_screen.dart';
 
 class StudySpaceCard extends StatelessWidget {
   final StudySpace space;
+  final Future<void> Function()? onReviewSubmitted;
 
   const StudySpaceCard({
     super.key,
     required this.space,
+    this.onReviewSubmitted,
   });
+
+  void _openDetail(BuildContext context) {
+    context.pushNamed(
+      'studySpaceDetail',
+      pathParameters: {'id': space.id},
+      extra: StudySpaceDetailArgs(
+        space: space,
+        onReviewSubmitted: onReviewSubmitted,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,26 +31,27 @@ class StudySpaceCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {
-          // TODO: Navigate to space details screen
-        },
+        onTap: () => _openDetail(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Placeholder Image (we'll replace this with real images later)
             Container(
               height: 150,
               width: double.infinity,
               color: Colors.grey.shade300,
-              child: const Center(
-                child: Icon(
-                  Icons.image_outlined,
-                  size: 50,
-                  color: Colors.grey,
-                ),
-              ),
+              child: space.imageUrl != null
+                  ? Image.network(
+                      space.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.image_outlined, size: 50, color: Colors.grey),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(Icons.image_outlined, size: 50, color: Colors.grey),
+                    ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -47,22 +63,24 @@ class StudySpaceCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           space.name,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.star, color: AppTheme.sjsuGold, size: 20),
+                          const Icon(
+                            Icons.star,
+                            color: AppTheme.sjsuGold,
+                            size: 20,
+                          ),
                           const SizedBox(width: 4),
                           Text(
-                            space.rating.toString(),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            space.rating.toStringAsFixed(1),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -76,8 +94,7 @@ class StudySpaceCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
-                  // Filter tags
+
                   Row(
                     children: [
                       _buildTag(
