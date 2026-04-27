@@ -50,3 +50,7 @@ app.*.map.json
 .DS_Store
 
 .vscode/ 
+
+# Node / Firebase Functions
+node_modules/
+functions/node_modules/
