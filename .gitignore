@@ -50,3 +50,13 @@ app.*.map.json
 .DS_Store
 
 .vscode/ 
+
+# Security - API Keys & Sensitive Data
+users.json
+*.key
+*.pem
+.env
+.env.local
+.env.*.local
+firebase-credentials.json
+secrets.json

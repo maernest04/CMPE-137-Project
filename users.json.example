@@ -1,0 +1,15 @@
+{
+  "users": [
+    {
+      "localId": "example_user_id",
+      "email": "example@example.com",
+      "emailVerified": false,
+      "passwordHash": "HASH_PLACEHOLDER",
+      "salt": "SALT_PLACEHOLDER",
+      "displayName": "Example User",
+      "lastSignedInAt": "1234567890",
+      "createdAt": "1234567890",
+      "providerUserInfo": []
+    }
+  ]
+}
