@@ -25,6 +25,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _buildingController = TextEditingController();
+  late final TextEditingController _addressController;
   final _descriptionController = TextEditingController();
   late final TextEditingController _latitudeController;
   late final TextEditingController _longitudeController;
@@ -43,12 +44,16 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     _longitudeController = TextEditingController(
       text: widget.initialLongitude.toStringAsFixed(6),
     );
+    _addressController = TextEditingController(
+      text: 'One Washington Square, San Jose, CA 95192',
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _buildingController.dispose();
+    _addressController.dispose();
     _descriptionController.dispose();
     _latitudeController.dispose();
     _longitudeController.dispose();
@@ -85,6 +90,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
         final createdSpace = await StudySpaceService.instance.createStudySpace(
           name: _nameController.text,
           building: _buildingController.text,
+          address: _addressController.text,
           noiseLevel: _selectedNoiseLevel,
           hasOutlets: _hasOutlets,
           latitude: latitude,
@@ -110,6 +116,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
         final createdSpace = await StudySpaceService.instance.createStudySpace(
           name: _nameController.text,
           building: _buildingController.text,
+          address: _addressController.text,
           noiseLevel: _selectedNoiseLevel,
           hasOutlets: _hasOutlets,
           latitude: latitude,
@@ -195,6 +202,17 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                   ),
                   validator: (value) =>
                       _requiredValidator(value, 'Enter the building name'),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _addressController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Address',
+                    hintText: 'One Washington Square, San Jose, CA 95192',
+                  ),
+                  validator: (value) =>
+                      _requiredValidator(value, 'Enter the address for this study space'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(

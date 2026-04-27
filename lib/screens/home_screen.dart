@@ -180,7 +180,10 @@ class _HomeScreenState extends State<HomeScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (context) {
-        return const CreateStudySpaceSheet();
+        return const CreateStudySpaceSheet(
+          initialLatitude: 37.3352,
+          initialLongitude: -121.8811,
+        );
       },
     );
 

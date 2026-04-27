@@ -41,6 +41,8 @@ class StudySpace {
     double? latitude,
     double? longitude,
     double? rating,
+    String? createdBy,
+    String? address,
     String? description,
     String? imageUrl,
   }) {
@@ -53,6 +55,8 @@ class StudySpace {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       rating: rating ?? this.rating,
+      createdBy: createdBy ?? this.createdBy,
+      address: address ?? this.address,
       description: description ?? this.description,
       imageUrl: imageUrl ?? this.imageUrl,
     );
