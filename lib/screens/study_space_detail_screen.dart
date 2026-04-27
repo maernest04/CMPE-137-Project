@@ -220,6 +220,20 @@ class StudySpaceDetailScreen extends StatelessWidget {
                         color: Colors.blue.shade100,
                         textColor: Colors.blue.shade900,
                       ),
+                      if (space.floor != null && space.floor!.isNotEmpty)
+                        _DetailTag(
+                          icon: Icons.layers,
+                          label: space.floor!,
+                          color: Colors.purple.shade50,
+                          textColor: Colors.purple.shade900,
+                        ),
+                      if (space.areaDescription != null && space.areaDescription!.isNotEmpty)
+                        _DetailTag(
+                          icon: Icons.meeting_room,
+                          label: space.areaDescription!,
+                          color: Colors.teal.shade50,
+                          textColor: Colors.teal.shade900,
+                        ),
                       if (space.hasOutlets)
                         _DetailTag(
                           icon: Icons.electrical_services,
@@ -262,18 +276,22 @@ class StudySpaceDetailScreen extends StatelessWidget {
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: hasAddress
-                          ? SelectableText(
-                              space.address,
-                              style: textTheme.bodyLarge,
-                            )
-                          : Text(
-                              'Address is not available for this '
-                              'space yet.',
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey.shade700,
-                              ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (space.floor != null || space.areaDescription != null) ...[
+                            Text(
+                              '${space.floor ?? ''}${space.floor != null && space.areaDescription != null ? ' - ' : ''}${space.areaDescription ?? ''}',
+                              style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                             ),
+                            const SizedBox(height: 8),
+                          ],
+                          Text(
+                            hasAddress ? space.address : 'One Washington Square, San Jose, CA 95192',
+                            style: textTheme.bodyLarge,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),

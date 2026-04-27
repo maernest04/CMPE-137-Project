@@ -12,10 +12,13 @@ class StudySpace {
   final double rating;
   final String address;
   final String createdBy;
-  /// Optional longer description from Firestore or mock data.
   final String? description;
   /// Optional image URL from Firebase Storage.
   final String? imageUrl;
+  /// New: Floor level of the study space
+  final String? floor;
+  /// New: Specific area description (e.g., "Near the windows", "Room 401")
+  final String? areaDescription;
 
   StudySpace({
     required this.id,
@@ -30,6 +33,8 @@ class StudySpace {
     this.address = '',
     this.description,
     this.imageUrl,
+    this.floor,
+    this.areaDescription,
   });
 
   StudySpace copyWith({
@@ -45,6 +50,8 @@ class StudySpace {
     String? address,
     String? description,
     String? imageUrl,
+    String? floor,
+    String? areaDescription,
   }) {
     return StudySpace(
       id: id ?? this.id,
@@ -59,6 +66,8 @@ class StudySpace {
       address: address ?? this.address,
       description: description ?? this.description,
       imageUrl: imageUrl ?? this.imageUrl,
+      floor: floor ?? this.floor,
+      areaDescription: areaDescription ?? this.areaDescription,
     );
   }
 
@@ -121,6 +130,10 @@ class StudySpace {
           ? data['description'] as String
           : null,
       imageUrl: data['imageUrl'] is String ? data['imageUrl'] as String : null,
+      floor: data['floor'] is String ? data['floor'] as String : null,
+      areaDescription: data['areaDescription'] is String
+          ? data['areaDescription'] as String
+          : null,
     );
   }
 }
@@ -140,6 +153,8 @@ final List<StudySpace> mockStudySpaces = [
     description:
         'Dedicated quiet floor with long tables, good lighting, and reliable '
         'Wi‑Fi. Popular during finals—arrive early for a seat near outlets.',
+    floor: '4th Floor',
+    areaDescription: 'Quiet Zone',
   ),
   StudySpace(
     id: '2',
@@ -154,6 +169,8 @@ final List<StudySpace> mockStudySpaces = [
     description:
         'High-energy spot with food nearby. Better for group work or casual '
         'reading than deep focus sessions.',
+    floor: '1st Floor',
+    areaDescription: 'Main Dining Area',
   ),
   StudySpace(
     id: '3',
@@ -168,5 +185,7 @@ final List<StudySpace> mockStudySpaces = [
     description:
         'Comfortable seating between classes. Foot traffic picks up midday; '
         'mornings are usually calmer.',
+    floor: '2nd Floor',
+    areaDescription: 'East Wing Lounge',
   ),
 ];

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
+import 'package:cmpe_137_study_space/config/buildings.dart';
+import 'package:cmpe_137_study_space/config/sjsu_campus_map.dart';
 
 class CreateStudySpaceSheet extends StatefulWidget {
   final double initialLatitude;
@@ -27,12 +29,15 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
   final _buildingController = TextEditingController();
   late final TextEditingController _addressController;
   final _descriptionController = TextEditingController();
+  final _floorController = TextEditingController();
+  final _areaController = TextEditingController();
   late final TextEditingController _latitudeController;
   late final TextEditingController _longitudeController;
 
   String _selectedNoiseLevel = 'Moderate';
   bool _hasOutlets = true;
   bool _isSubmitting = false;
+  bool _isOtherSelected = false;
   XFile? _selectedImage;
 
   @override
@@ -55,6 +60,8 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     _buildingController.dispose();
     _addressController.dispose();
     _descriptionController.dispose();
+    _floorController.dispose();
+    _areaController.dispose();
     _latitudeController.dispose();
     _longitudeController.dispose();
     super.dispose();
@@ -82,6 +89,30 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
       return;
     }
 
+    if (!studySpaceHasMapPosition(latitude, longitude)) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Location outside campus'),
+          content: const Text(
+            'The coordinates you entered are outside the SJSU campus bounds. '
+            'This space might not appear on the campus map. Do you want to proceed?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Proceed'),
+            ),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -96,6 +127,8 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
           latitude: latitude,
           longitude: longitude,
           description: _descriptionController.text,
+          floor: _floorController.text,
+          areaDescription: _areaController.text,
         );
 
         imageUrl = await StudySpaceService.instance.uploadStudySpaceImage(
@@ -123,6 +156,8 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
           longitude: longitude,
           description: _descriptionController.text,
           imageUrl: imageUrl,
+          floor: _floorController.text,
+          areaDescription: _areaController.text,
         );
 
         if (!mounted) return;
@@ -193,27 +228,87 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                       _requiredValidator(value, 'Enter a name for this study space'),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _buildingController,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Building',
-                    hintText: 'Engineering Building',
-                  ),
-                  validator: (value) =>
-                      _requiredValidator(value, 'Enter the building name'),
+                Autocomplete<CampusBuilding>(
+                  displayStringForOption: (option) => option.name,
+                  optionsBuilder: (textEditingValue) {
+                    if (textEditingValue.text.isEmpty) {
+                      return sjsuBuildings;
+                    }
+                    return sjsuBuildings.where((b) => b.name
+                        .toLowerCase()
+                        .contains(textEditingValue.text.toLowerCase()));
+                  },
+                  onSelected: (option) {
+                    _buildingController.text = option.name;
+                    _latitudeController.text = option.location.latitude.toStringAsFixed(6);
+                    _longitudeController.text = option.location.longitude.toStringAsFixed(6);
+                    setState(() {
+                      _isOtherSelected = option.isOther;
+                    });
+                  },
+                  fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                    return TextFormField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Building',
+                        hintText: 'Search SJSU Building...',
+                        prefixIcon: Icon(Icons.business),
+                      ),
+                      validator: (value) => _requiredValidator(value, 'Select or enter a building'),
+                      onChanged: (value) {
+                        _buildingController.text = value;
+                        // If they clear or type something else, we might want to reset isOtherSelected
+                        // but for simplicity, we rely on the Autocomplete selection.
+                        final match = sjsuBuildings.any((b) => b.name == value && b.isOther);
+                        if (_isOtherSelected != match) {
+                          setState(() => _isOtherSelected = match);
+                        }
+                      },
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _addressController,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Address',
-                    hintText: 'One Washington Square, San Jose, CA 95192',
-                  ),
-                  validator: (value) =>
-                      _requiredValidator(value, 'Enter the address for this study space'),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _floorController,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Floor',
+                          hintText: 'e.g. 4th Floor',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _areaController,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Room/Area',
+                          hintText: 'e.g. Room 401',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                if (_isOtherSelected) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _addressController,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Address',
+                      hintText: 'Enter specific street address...',
+                    ),
+                    validator: (value) => _isOtherSelected
+                        ? _requiredValidator(value, 'Address is required for custom locations')
+                        : null,
+                  ),
+                ],
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedNoiseLevel,
@@ -270,33 +365,43 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                     ],
                   ],
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _latitudeController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          signed: true,
-                          decimal: true,
+                if (_isOtherSelected)
+                  ExpansionTile(
+                    title: const Text('Map Coordinates (Advanced)'),
+                    initiallyExpanded: true,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _latitudeController,
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  signed: true,
+                                  decimal: true,
+                                ),
+                                decoration: const InputDecoration(labelText: 'Latitude'),
+                                validator: (value) => _coordinateValidator(value, 'Latitude'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _longitudeController,
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  signed: true,
+                                  decimal: true,
+                                ),
+                                decoration: const InputDecoration(labelText: 'Longitude'),
+                                validator: (value) => _coordinateValidator(value, 'Longitude'),
+                              ),
+                            ),
+                          ],
                         ),
-                        decoration: const InputDecoration(labelText: 'Latitude'),
-                        validator: (value) => _coordinateValidator(value, 'Latitude'),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _longitudeController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          signed: true,
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(labelText: 'Longitude'),
-                        validator: (value) => _coordinateValidator(value, 'Longitude'),
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 const SizedBox(height: 20),
                 FilledButton.icon(
                   onPressed: _isSubmitting ? null : _submit,

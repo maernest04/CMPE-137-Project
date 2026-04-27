@@ -50,6 +50,10 @@ class StudySpaceService {
           ? data['description'] as String
           : null,
       imageUrl: data['imageUrl'] is String ? data['imageUrl'] as String : null,
+      floor: data['floor'] is String ? data['floor'] as String : null,
+      areaDescription: data['areaDescription'] is String
+          ? data['areaDescription'] as String
+          : null,
     );
   }
 
@@ -88,6 +92,8 @@ class StudySpaceService {
     required String address,
     String? description,
     String? imageUrl,
+    String? floor,
+    String? areaDescription,
   }) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
@@ -117,6 +123,12 @@ class StudySpaceService {
     if (imageUrl != null && imageUrl.isNotEmpty) {
       payload['imageUrl'] = imageUrl;
     }
+    if (floor != null && floor.isNotEmpty) {
+      payload['floor'] = floor.trim();
+    }
+    if (areaDescription != null && areaDescription.isNotEmpty) {
+      payload['areaDescription'] = areaDescription.trim();
+    }
 
     final ref = await _firestore.collection('spaces').add(payload);
     return StudySpace(
@@ -132,6 +144,8 @@ class StudySpaceService {
       address: address.trim(),
       description: trimmedDescription,
       imageUrl: imageUrl,
+      floor: floor?.trim(),
+      areaDescription: areaDescription?.trim(),
     );
   }
 

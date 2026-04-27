@@ -137,6 +137,7 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                           title: Text(space.name),
                           subtitle: Text(
+                            '${space.floor != null ? '${space.floor} • ' : ''}${space.areaDescription ?? ''}\n'
                             'Rating: ${space.rating.toStringAsFixed(1)} • Noise: ${space.noiseLevel}\n'
                             '${space.hasOutlets ? '🔌 Has Outlets' : 'No Outlets'}',
                           ),
