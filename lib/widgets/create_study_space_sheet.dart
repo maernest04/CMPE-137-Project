@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
 
 class CreateStudySpaceSheet extends StatefulWidget {
+  final double initialLatitude;
+  final double initialLongitude;
   final ValueChanged<StudySpace>? onCreated;
-  
+
   const CreateStudySpaceSheet({
     super.key,
+    required this.initialLatitude,
+    required this.initialLongitude,
     this.onCreated,
   });
 
@@ -21,15 +26,23 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
   final _nameController = TextEditingController();
   final _buildingController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _addressController = TextEditingController();
+  late final TextEditingController _latitudeController;
+  late final TextEditingController _longitudeController;
 
   String _selectedNoiseLevel = 'Moderate';
   bool _hasOutlets = true;
   bool _isSubmitting = false;
+  XFile? _selectedImage;
 
   @override
   void initState() {
     super.initState();
+    _latitudeController = TextEditingController(
+      text: widget.initialLatitude.toStringAsFixed(6),
+    );
+    _longitudeController = TextEditingController(
+      text: widget.initialLongitude.toStringAsFixed(6),
+    );
   }
 
   @override
@@ -37,8 +50,17 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     _nameController.dispose();
     _buildingController.dispose();
     _descriptionController.dispose();
-    _addressController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => _selectedImage = image);
+    }
   }
 
   Future<void> _submit() async {
@@ -46,23 +68,60 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
       return;
     }
 
+    final latitude = double.tryParse(_latitudeController.text.trim());
+    final longitude = double.tryParse(_longitudeController.text.trim());
+    if (latitude == null || longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter valid coordinates for the study space.')),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
-      final createdSpace = await StudySpaceService.instance.createStudySpace(
-        name: _nameController.text,
-        building: _buildingController.text,
-        noiseLevel: _selectedNoiseLevel,
-        hasOutlets: _hasOutlets,
-        latitude: 0.0,
-        longitude: 0.0,
-        address: _addressController.text,
-        description: _descriptionController.text,
-      );
+      String? imageUrl;
+      if (_selectedImage != null) {
+        final createdSpace = await StudySpaceService.instance.createStudySpace(
+          name: _nameController.text,
+          building: _buildingController.text,
+          noiseLevel: _selectedNoiseLevel,
+          hasOutlets: _hasOutlets,
+          latitude: latitude,
+          longitude: longitude,
+          description: _descriptionController.text,
+        );
 
-      if (!mounted) return;
-      widget.onCreated?.call(createdSpace);
-      Navigator.of(context).pop(createdSpace);
+        imageUrl = await StudySpaceService.instance.uploadStudySpaceImage(
+          createdSpace.id,
+          _selectedImage!.path,
+        );
+
+        await StudySpaceService.instance.updateStudySpaceImageUrl(
+          createdSpace.id,
+          imageUrl,
+        );
+
+        final updatedSpace = createdSpace.copyWith(imageUrl: imageUrl);
+        if (!mounted) return;
+        widget.onCreated?.call(updatedSpace);
+        Navigator.of(context).pop(updatedSpace);
+      } else {
+        final createdSpace = await StudySpaceService.instance.createStudySpace(
+          name: _nameController.text,
+          building: _buildingController.text,
+          noiseLevel: _selectedNoiseLevel,
+          hasOutlets: _hasOutlets,
+          latitude: latitude,
+          longitude: longitude,
+          description: _descriptionController.text,
+          imageUrl: imageUrl,
+        );
+
+        if (!mounted) return;
+        widget.onCreated?.call(createdSpace);
+        Navigator.of(context).pop(createdSpace);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +141,15 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
     return null;
   }
 
-
+  String? _coordinateValidator(String? value, String label) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Enter a $label value';
+    }
+    if (double.tryParse(value.trim()) == null) {
+      return '$label must be a valid number';
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,17 +197,6 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                       _requiredValidator(value, 'Enter the building name'),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _addressController,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Address',
-                    hintText: '1 Washington Sq',
-                  ),
-                  validator: (value) =>
-                      _requiredValidator(value, 'Enter the address'),
-                ),
-                const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: _selectedNoiseLevel,
                   decoration: const InputDecoration(labelText: 'Noise level'),
@@ -175,7 +231,54 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                     hintText: 'What makes this a good study spot?',
                   ),
                 ),
-
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.image),
+                        label: const Text('Pick Image'),
+                      ),
+                    ),
+                    if (_selectedImage != null) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _selectedImage!.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _latitudeController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          signed: true,
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(labelText: 'Latitude'),
+                        validator: (value) => _coordinateValidator(value, 'Latitude'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _longitudeController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          signed: true,
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(labelText: 'Longitude'),
+                        validator: (value) => _coordinateValidator(value, 'Longitude'),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 FilledButton.icon(
                   onPressed: _isSubmitting ? null : _submit,

@@ -135,9 +135,17 @@ class StudySpaceDetailScreen extends StatelessWidget {
               height: 200,
               width: double.infinity,
               color: Colors.grey.shade300,
-              child: const Center(
-                child: Icon(Icons.image_outlined, size: 64, color: Colors.grey),
-              ),
+              child: space.imageUrl != null
+                  ? Image.network(
+                      space.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.image_outlined, size: 64, color: Colors.grey),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(Icons.image_outlined, size: 64, color: Colors.grey),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(16),

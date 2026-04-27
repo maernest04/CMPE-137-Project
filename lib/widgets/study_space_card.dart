@@ -39,9 +39,17 @@ class StudySpaceCard extends StatelessWidget {
               height: 150,
               width: double.infinity,
               color: Colors.grey.shade300,
-              child: const Center(
-                child: Icon(Icons.image_outlined, size: 50, color: Colors.grey),
-              ),
+              child: space.imageUrl != null
+                  ? Image.network(
+                      space.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.image_outlined, size: 50, color: Colors.grey),
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(Icons.image_outlined, size: 50, color: Colors.grey),
+                    ),
             ),
 
             Padding(
