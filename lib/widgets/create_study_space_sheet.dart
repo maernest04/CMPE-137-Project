@@ -216,7 +216,7 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedNoiseLevel,
+                  initialValue: _selectedNoiseLevel,
                   decoration: const InputDecoration(labelText: 'Noise level'),
                   items: _noiseLevels
                       .map(

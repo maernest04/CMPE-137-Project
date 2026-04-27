@@ -1,11 +1,7 @@
 import 'package:cmpe_137_study_space/config/sjsu_campus_map.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
-import 'package:cmpe_137_study_space/screens/study_space_detail_screen.dart';
-import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
-import 'package:cmpe_137_study_space/widgets/create_study_space_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 

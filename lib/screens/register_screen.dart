@@ -172,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 // Major Dropdown
                 DropdownButtonFormField<String>(
-                  value: _selectedMajor,
+                  initialValue: _selectedMajor,
                   decoration: InputDecoration(
                     labelText: 'Major',
                     prefixIcon: const Icon(Icons.school_outlined),

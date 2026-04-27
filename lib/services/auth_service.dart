@@ -58,7 +58,7 @@ class AuthService extends ChangeNotifier {
       }
     } catch (e) {
       _error = 'Failed to load user data: $e';
-      print(_error);
+      debugPrint(_error);
     }
     notifyListeners();
   }
