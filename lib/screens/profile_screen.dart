@@ -290,13 +290,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 )
               : Text(_isLoginMode ? 'Sign in' : 'Create account'),
         ),
-        const SizedBox(height: 16),
-        const Text(
-          'This app uses a mocked auth flow. There is no backend yet.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: Colors.grey),
-        ),
+        const SizedBox(height: 24),
       ],
+    );
+  }
+}
+
+class _StarChip extends StatelessWidget {
+  final int rating;
+
+  const _StarChip({required this.rating});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star, size: 14, color: Colors.amber),
+          const SizedBox(width: 4),
+          Text(
+            '$rating/5',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Colors.amber.shade900,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }

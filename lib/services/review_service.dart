@@ -21,6 +21,7 @@ class ReviewService {
     required int comfort,
     required int crowdLevel,
     required int easeOfAccess,
+    required int overallRating,
     required String comment,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -45,6 +46,7 @@ class ReviewService {
       'comfort': comfort,
       'crowdLevel': crowdLevel,
       'easeOfAccess': easeOfAccess,
+      'overallRating': overallRating,
       'comment': comment,
     };
 

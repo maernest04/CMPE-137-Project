@@ -10,6 +10,9 @@ class StudySpace {
   final double latitude;
   final double longitude;
   final double rating;
+  final double comfortRating;
+  final double crowdRating;
+  final double accessRating;
   final String address;
   final String createdBy;
   final String? description;
@@ -29,6 +32,9 @@ class StudySpace {
     required this.latitude,
     required this.longitude,
     required this.rating,
+    this.comfortRating = 0,
+    this.crowdRating = 0,
+    this.accessRating = 0,
     required this.createdBy,
     this.address = '',
     this.description,
@@ -46,6 +52,9 @@ class StudySpace {
     double? latitude,
     double? longitude,
     double? rating,
+    double? comfortRating,
+    double? crowdRating,
+    double? accessRating,
     String? createdBy,
     String? address,
     String? description,
@@ -62,6 +71,9 @@ class StudySpace {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       rating: rating ?? this.rating,
+      comfortRating: comfortRating ?? this.comfortRating,
+      crowdRating: crowdRating ?? this.crowdRating,
+      accessRating: accessRating ?? this.accessRating,
       createdBy: createdBy ?? this.createdBy,
       address: address ?? this.address,
       description: description ?? this.description,
@@ -111,6 +123,9 @@ class StudySpace {
         latitude: 0,
         longitude: 0,
         rating: 0,
+        comfortRating: 0,
+        crowdRating: 0,
+        accessRating: 0,
         createdBy: '',
       );
     }
@@ -124,6 +139,9 @@ class StudySpace {
       latitude: coords.latitude,
       longitude: coords.longitude,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
+      comfortRating: ((data['comfortAvg'] ?? 0) as num).toDouble(),
+      crowdRating: ((data['crowdLevelAvg'] ?? 0) as num).toDouble(),
+      accessRating: ((data['accessAvg'] ?? 0) as num).toDouble(),
       createdBy: data['createdBy'] ?? '',
       address: data['address'] ?? '',
       description: data['description'] is String

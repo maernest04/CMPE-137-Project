@@ -85,22 +85,22 @@ GoRouter _buildGoRouter(AuthService authService) {
                     path: 'space/:id',
                     name: 'studySpaceDetail',
                     builder: (context, state) {
+                      final id = state.pathParameters['id'] ?? '';
                       final extra = state.extra;
                       if (extra is StudySpaceDetailArgs) {
                         return StudySpaceDetailScreen(
-                          space: extra.space,
+                          initialSpace: extra.space,
+                          spaceId: id,
                           onReviewSubmitted: extra.onReviewSubmitted,
                         );
                       }
                       if (extra is StudySpace) {
-                        return StudySpaceDetailScreen(space: extra);
+                        return StudySpaceDetailScreen(
+                          initialSpace: extra,
+                          spaceId: id,
+                        );
                       }
-                      return Scaffold(
-                        appBar: AppBar(title: const Text('Space')),
-                        body: const Center(
-                          child: Text('This space could not be loaded.'),
-                        ),
-                      );
+                      return StudySpaceDetailScreen(spaceId: id);
                     },
                   ),
                 ],
@@ -141,22 +141,22 @@ GoRouter _buildGoRouter(AuthService authService) {
         path: '/study-space/:id',
         name: 'studySpaceDetailRoot',
         builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
           final extra = state.extra;
           if (extra is StudySpaceDetailArgs) {
             return StudySpaceDetailScreen(
-              space: extra.space,
+              initialSpace: extra.space,
+              spaceId: id,
               onReviewSubmitted: extra.onReviewSubmitted,
             );
           }
           if (extra is StudySpace) {
-            return StudySpaceDetailScreen(space: extra);
+            return StudySpaceDetailScreen(
+              initialSpace: extra,
+              spaceId: id,
+            );
           }
-          return Scaffold(
-            appBar: AppBar(title: const Text('Space')),
-            body: const Center(
-              child: Text('This space could not be loaded.'),
-            ),
-          );
+          return StudySpaceDetailScreen(spaceId: id);
         },
       ),
     ],

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
@@ -12,23 +14,96 @@ class StudySpaceDetailArgs {
   final StudySpace space;
   final Future<void> Function()? onReviewSubmitted;
 
-  const StudySpaceDetailArgs({
-    required this.space,
-    this.onReviewSubmitted,
-  });
+  const StudySpaceDetailArgs({required this.space, this.onReviewSubmitted});
 }
 
-class StudySpaceDetailScreen extends StatelessWidget {
-  final StudySpace space;
+class StudySpaceDetailScreen extends StatefulWidget {
+  final StudySpace? initialSpace;
+  final String spaceId;
   final Future<void> Function()? onReviewSubmitted;
 
   const StudySpaceDetailScreen({
     super.key,
-    required this.space,
+    this.initialSpace,
+    required this.spaceId,
     this.onReviewSubmitted,
   });
 
+  @override
+  State<StudySpaceDetailScreen> createState() => _StudySpaceDetailScreenState();
+}
+
+class _StudySpaceDetailScreenState extends State<StudySpaceDetailScreen> {
+  late StudySpace? _space;
+  bool _isLoading = false;
+  String? _errorMessage;
+  StreamSubscription<StudySpace?>? _spaceSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _space = widget.initialSpace;
+    _watchSpace();
+    if (_space == null) {
+      _loadSpace();
+    }
+  }
+
+  @override
+  void dispose() {
+    _spaceSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _watchSpace() {
+    _spaceSubscription = StudySpaceService.instance
+        .watchStudySpaceById(widget.spaceId)
+        .listen(
+          (space) {
+            if (!mounted) return;
+            setState(() {
+              _space = space;
+              _isLoading = false;
+              _errorMessage = null;
+            });
+          },
+          onError: (Object e) {
+            if (!mounted) return;
+            setState(() {
+              _errorMessage = e.toString();
+              _isLoading = false;
+            });
+          },
+        );
+  }
+
+  Future<void> _loadSpace() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final space = await StudySpaceService.instance.fetchStudySpaceById(
+        widget.spaceId,
+      );
+      if (mounted) {
+        setState(() {
+          _space = space;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   void _showLeaveReviewModal(BuildContext context) {
+    if (_space == null) return;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -37,19 +112,29 @@ class StudySpaceDetailScreen extends StatelessWidget {
       ),
       builder: (context) {
         return ReviewModalContent(
-          space: space,
-          onReviewSubmitted: onReviewSubmitted,
+          space: _space!,
+          onReviewSubmitted: _refreshAfterReviewMutation,
         );
       },
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context) async {
+  Future<void> _refreshAfterReviewMutation() async {
+    await _loadSpace();
+    if (widget.onReviewSubmitted != null) {
+      await widget.onReviewSubmitted!();
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    if (_space == null) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Study Space?'),
-        content: const Text('Are you sure you want to delete this study space? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to delete this study space? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -64,26 +149,25 @@ class StudySpaceDetailScreen extends StatelessWidget {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
+    if (confirmed == true && mounted) {
       try {
-        await StudySpaceService.instance.deleteStudySpace(space.id);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Study space deleted.')),
-          );
-          // If a callback was provided to refresh the parent list, call it.
-          if (onReviewSubmitted != null) {
-            await onReviewSubmitted!();
-          }
-          if (context.mounted) {
-            context.pop();
+        await StudySpaceService.instance.deleteStudySpace(_space!.id);
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Study space deleted.')));
+
+          context.pop();
+
+          if (widget.onReviewSubmitted != null) {
+            await widget.onReviewSubmitted!();
           }
         }
       } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete space: $e')),
-          );
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete space: $e')));
         }
       }
     }
@@ -91,16 +175,36 @@ class StudySpaceDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Loading...')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null || _space == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Space')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_errorMessage ?? 'This space could not be found.'),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _loadSpace, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final space = _space!;
     final textTheme = Theme.of(context).textTheme;
     final hasAddress = space.address.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          space.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: Text(space.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
             icon: Icon(
@@ -112,18 +216,21 @@ class StudySpaceDetailScreen extends StatelessWidget {
               final authService = AuthScope.of(context);
               if (!authService.isSignedIn) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Sign in to save study spaces.')),
+                  const SnackBar(
+                    content: Text('Sign in to save study spaces.'),
+                  ),
                 );
                 return;
               }
               authService.toggleSavedSpace(space.id);
             },
           ),
-          if (AuthScope.of(context).uid == space.createdBy && space.createdBy.isNotEmpty)
+          if (AuthScope.of(context).uid == space.createdBy &&
+              space.createdBy.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_outline),
               color: Colors.red,
-              onPressed: () => _confirmDelete(context),
+              onPressed: _confirmDelete,
             ),
         ],
       ),
@@ -139,12 +246,21 @@ class StudySpaceDetailScreen extends StatelessWidget {
                   ? Image.network(
                       space.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Center(
-                        child: Icon(Icons.image_outlined, size: 64, color: Colors.grey),
-                      ),
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                          ),
                     )
                   : const Center(
-                      child: Icon(Icons.image_outlined, size: 64, color: Colors.grey),
+                      child: Icon(
+                        Icons.image_outlined,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
                     ),
             ),
             Padding(
@@ -216,37 +332,44 @@ class StudySpaceDetailScreen extends StatelessWidget {
                     children: [
                       _DetailTag(
                         icon: Icons.volume_up,
-                        label: space.noiseLevel,
-                        color: Colors.blue.shade100,
+                        label: 'Noise: ${space.noiseLevel}',
+                        color: Colors.blue.shade50,
                         textColor: Colors.blue.shade900,
+                      ),
+                      _DetailTag(
+                        icon: Icons.chair,
+                        label:
+                            'Comfort: ${space.comfortRating.toStringAsFixed(1)}/5',
+                        color: Colors.orange.shade50,
+                        textColor: Colors.orange.shade900,
+                      ),
+                      _DetailTag(
+                        icon: Icons.groups,
+                        label:
+                            'Crowd: ${space.crowdRating.toStringAsFixed(1)}/5',
+                        color: Colors.red.shade50,
+                        textColor: Colors.red.shade900,
+                      ),
+                      _DetailTag(
+                        icon: Icons.accessibility,
+                        label:
+                            'Access: ${space.accessRating.toStringAsFixed(1)}/5',
+                        color: Colors.green.shade50,
+                        textColor: Colors.green.shade900,
                       ),
                       if (space.floor != null && space.floor!.isNotEmpty)
                         _DetailTag(
                           icon: Icons.layers,
-                          label: space.floor!,
+                          label: 'Floor: ${space.floor!}',
                           color: Colors.purple.shade50,
                           textColor: Colors.purple.shade900,
-                        ),
-                      if (space.areaDescription != null && space.areaDescription!.isNotEmpty)
-                        _DetailTag(
-                          icon: Icons.meeting_room,
-                          label: space.areaDescription!,
-                          color: Colors.teal.shade50,
-                          textColor: Colors.teal.shade900,
                         ),
                       if (space.hasOutlets)
                         _DetailTag(
                           icon: Icons.electrical_services,
                           label: 'Power outlets',
-                          color: Colors.green.shade100,
-                          textColor: Colors.green.shade900,
-                        )
-                      else
-                        _DetailTag(
-                          icon: Icons.power_off,
-                          label: 'No outlets listed',
-                          color: Colors.orange.shade50,
-                          textColor: Colors.orange.shade900,
+                          color: Colors.cyan.shade50,
+                          textColor: Colors.cyan.shade900,
                         ),
                     ],
                   ),
@@ -279,15 +402,20 @@ class StudySpaceDetailScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (space.floor != null || space.areaDescription != null) ...[
+                          if (space.floor != null ||
+                              space.areaDescription != null) ...[
                             Text(
                               '${space.floor ?? ''}${space.floor != null && space.areaDescription != null ? ' - ' : ''}${space.areaDescription ?? ''}',
-                              style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 8),
                           ],
                           Text(
-                            hasAddress ? space.address : 'One Washington Square, San Jose, CA 95192',
+                            hasAddress
+                                ? space.address
+                                : 'One Washington Square, San Jose, CA 95192',
                             style: textTheme.bodyLarge,
                           ),
                         ],
@@ -304,7 +432,7 @@ class StudySpaceDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   SpaceReviewsSection(
                     space: space,
-                    onReviewsMutated: onReviewSubmitted,
+                    onReviewsMutated: _refreshAfterReviewMutation,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -355,9 +483,9 @@ class _DetailTag extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

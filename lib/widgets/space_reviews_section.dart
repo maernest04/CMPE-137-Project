@@ -272,6 +272,7 @@ class _ReviewTile extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
+                _StarChip(rating: review.overallRating),
                 _NoiseChip(level: review.noiseLevel),
                 _MiniChip(label: 'Comfort', value: review.comfort),
                 _MiniChip(label: 'Crowd', value: review.crowdLevel),
@@ -345,6 +346,37 @@ class _MiniChip extends StatelessWidget {
               color: Colors.grey.shade800,
               fontWeight: FontWeight.w600,
             ),
+      ),
+    );
+  }
+}
+
+class _StarChip extends StatelessWidget {
+  final int rating;
+
+  const _StarChip({required this.rating});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star, size: 14, color: Colors.amber),
+          const SizedBox(width: 4),
+          Text(
+            '$rating/5',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Colors.amber.shade900,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
       ),
     );
   }

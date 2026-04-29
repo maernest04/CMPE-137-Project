@@ -29,12 +29,18 @@ async function recalculateSpaceAverages(spaceId) {
   let comfort = 0;
   let crowd = 0;
   let access = 0;
+  let overall = 0;
+  let overallCount = 0;
   snap.forEach((d) => {
     const r = d.data();
     noise += r.noiseLevel || 0;
     comfort += r.comfort || 0;
     crowd += r.crowdLevel || 0;
     access += r.easeOfAccess || 0;
+    if (r.overallRating) {
+      overall += r.overallRating;
+      overallCount++;
+    }
   });
   const n = snap.size;
   const noiseA = noise / n;
@@ -48,7 +54,7 @@ async function recalculateSpaceAverages(spaceId) {
       comfortAvg: comfortA,
       crowdLevelAvg: crowdA,
       accessAvg: accessA,
-      overallAvg: (noiseA + comfortA + crowdA + accessA) / 4.0,
+      overallAvg: overallCount > 0 ? overall / overallCount : (noiseA + comfortA + crowdA + accessA) / 4.0,
       reviewCount: n,
     },
     { merge: true },
@@ -92,7 +98,7 @@ exports.submitReview = functions.https.onRequest((req, res) => {
     }
 
     const body = req.body || {};
-    const { spaceId, noiseLevel, comfort, crowdLevel, easeOfAccess, comment } = body;
+    const { spaceId, noiseLevel, comfort, crowdLevel, easeOfAccess, overallRating, comment } = body;
 
     if (!spaceId) {
       return res.status(400).send({ error: 'spaceId is required' });
@@ -107,8 +113,9 @@ exports.submitReview = functions.https.onRequest((req, res) => {
     const conf = toInt(comfort);
     const crowd = toInt(crowdLevel);
     const access = toInt(easeOfAccess);
+    const overall = toInt(overallRating);
 
-    if ([noise, conf, crowd, access].some((v) => v === null || v < 1 || v > 5)) {
+    if ([noise, conf, crowd, access, overall].some((v) => v === null || v < 1 || v > 5)) {
       return res.status(400).send({ error: 'Ratings must be integers between 1 and 5.' });
     }
 
@@ -123,9 +130,11 @@ exports.submitReview = functions.https.onRequest((req, res) => {
         comfort: conf,
         crowdLevel: crowd,
         easeOfAccess: access,
+        overallRating: overall,
         comment: comment || '',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+      await recalculateSpaceAverages(spaceId);
 
       return res.status(200).send({ success: true, id: newRef.id });
     } catch (err) {

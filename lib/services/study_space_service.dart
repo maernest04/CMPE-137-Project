@@ -44,6 +44,9 @@ class StudySpaceService {
       latitude: coords.latitude,
       longitude: coords.longitude,
       rating: ((data['overallAvg'] ?? 0) as num).toDouble(),
+      comfortRating: ((data['comfortAvg'] ?? 0) as num).toDouble(),
+      crowdRating: ((data['crowdLevelAvg'] ?? 0) as num).toDouble(),
+      accessRating: ((data['accessAvg'] ?? 0) as num).toDouble(),
       createdBy: data['createdBy'] ?? '',
       address: data['address'] ?? '',
       description: data['description'] is String
@@ -64,13 +67,41 @@ class StudySpaceService {
         .toList();
   }
 
+  Stream<List<StudySpace>> watchStudySpaces() {
+    return _firestore
+        .collection('spaces')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => studySpaceFromFirestore(doc.id, doc.data()))
+              .toList(),
+        );
+  }
+
+  Future<StudySpace?> fetchStudySpaceById(String id) async {
+    final doc = await _firestore.collection('spaces').doc(id).get();
+    final data = doc.data();
+    if (data == null) return null;
+    return studySpaceFromFirestore(id, data);
+  }
+
+  Stream<StudySpace?> watchStudySpaceById(String id) {
+    return _firestore.collection('spaces').doc(id).snapshots().map((doc) {
+      final data = doc.data();
+      if (data == null) return null;
+      return studySpaceFromFirestore(doc.id, data);
+    });
+  }
+
   Future<String> uploadStudySpaceImage(String spaceId, String imagePath) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
       throw StateError('You must be signed in to upload an image.');
     }
 
-    final ref = _storage.ref().child('study_spaces/$spaceId/${DateTime.now().millisecondsSinceEpoch}.jpg');
+    final ref = _storage.ref().child(
+      'study_spaces/$spaceId/${DateTime.now().millisecondsSinceEpoch}.jpg',
+    );
     await ref.putFile(File(imagePath));
     return await ref.getDownloadURL();
   }
@@ -111,7 +142,8 @@ class StudySpaceService {
       'overallAvg': 0,
       'reviewCount': 0,
       'createdBy': currentUser.uid,
-      'createdByName': currentUser.displayName ?? currentUser.email ?? 'Unknown user',
+      'createdByName':
+          currentUser.displayName ?? currentUser.email ?? 'Unknown user',
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -154,18 +186,18 @@ class StudySpaceService {
     if (currentUser == null) {
       throw StateError('You must be signed in to delete a study space.');
     }
-    
+
     final docRef = _firestore.collection('spaces').doc(spaceId);
     final doc = await docRef.get();
-    
+
     if (!doc.exists) {
       throw StateError('Study space does not exist.');
     }
-    
+
     if (doc.data()?['createdBy'] != currentUser.uid) {
       throw StateError('You can only delete study spaces you created.');
     }
-    
+
     await docRef.delete();
   }
 }

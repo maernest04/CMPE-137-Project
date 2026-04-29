@@ -31,6 +31,7 @@ class StudySpaceReviewsRepository {
     required int comfort,
     required int crowdLevel,
     required int easeOfAccess,
+    required int overallRating,
     required String comment,
   }) async {
     await _reviewsCol(spaceId).doc(reviewId).update({
@@ -38,6 +39,7 @@ class StudySpaceReviewsRepository {
       'comfort': comfort,
       'crowdLevel': crowdLevel,
       'easeOfAccess': easeOfAccess,
+      'overallRating': overallRating,
       'comment': comment,
       'updatedAt': FieldValue.serverTimestamp(),
     });

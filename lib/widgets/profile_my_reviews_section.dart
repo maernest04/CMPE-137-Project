@@ -181,6 +181,7 @@ class _ProfileMyReviewsSectionState extends State<ProfileMyReviewsSection> {
                         ),
                       const SizedBox(height: 8),
                       Text(
+                        '★ ${entry.review.overallRating}/5 · '
                         'Noise: ${noiseLevelLabel(entry.review.noiseLevel)} · '
                         'Comfort ${entry.review.comfort}/5 · '
                         'Crowd ${entry.review.crowdLevel}/5 · '

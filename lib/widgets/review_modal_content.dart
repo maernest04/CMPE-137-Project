@@ -29,6 +29,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
   late double _comfort;
   late double _crowd;
   late double _access;
+  late double _overallRating;
 
   bool get _isEdit => widget.existingReview != null;
 
@@ -40,6 +41,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
     _comfort = (e?.comfort ?? 3).toDouble().clamp(1, 5);
     _crowd = (e?.crowdLevel ?? 3).toDouble().clamp(1, 5);
     _access = (e?.easeOfAccess ?? 3).toDouble().clamp(1, 5);
+    _overallRating = (e?.overallRating ?? 5).toDouble().clamp(1, 5);
     _commentController = TextEditingController(text: e?.comment ?? '');
   }
 
@@ -76,6 +78,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
       final comfort = _comfort.round().clamp(1, 5);
       final crowd = _crowd.round().clamp(1, 5);
       final access = _access.round().clamp(1, 5);
+      final overall = _overallRating.round().clamp(1, 5);
 
       if (_isEdit) {
         await StudySpaceReviewsRepository().updateReview(
@@ -85,6 +88,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
           comfort: comfort,
           crowdLevel: crowd,
           easeOfAccess: access,
+          overallRating: overall,
           comment: comment,
         );
       } else {
@@ -94,6 +98,7 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
           comfort: comfort,
           crowdLevel: crowd,
           easeOfAccess: access,
+          overallRating: overall,
           comment: comment,
         );
         if (mounted) {
@@ -207,6 +212,45 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 20),
+            Text('Overall Rating', style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(5, (index) {
+                final starValue = index + 1;
+                final isSelected = starValue <= _overallRating.round();
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _overallRating = starValue.toDouble();
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    child: Column(
+                      children: [
+                        Icon(
+                          isSelected ? Icons.star : Icons.star_border,
+                          color: isSelected ? Colors.amber : Colors.grey,
+                          size: 40,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          starValue.toString(),
+                          style: TextStyle(
+                            color: isSelected ? Colors.amber.shade900 : Colors.grey,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const Divider(height: 32),
             _ratingSlider(
               title: 'Noise level',
               subtitle:
