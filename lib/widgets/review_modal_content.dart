@@ -176,7 +176,6 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
       ],
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final noiseRounded = _noise.round().clamp(1, 5);
@@ -187,122 +186,122 @@ class _ReviewModalContentState extends State<ReviewModalContent> {
           left: 16,
           right: 16,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 32,
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _isEdit ? 'Edit review' : 'Leave a review',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.space.name,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 20),
-            Text('Overall Rating', style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(5, (index) {
-                final starValue = index + 1;
-                final isSelected = starValue <= _overallRating.round();
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      _overallRating = starValue.toDouble();
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    child: Column(
-                      children: [
-                        Icon(
-                          isSelected ? Icons.star : Icons.star_border,
-                          color: isSelected ? Colors.amber : Colors.grey,
-                          size: 40,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          starValue.toString(),
-                          style: TextStyle(
-                            color: isSelected ? Colors.amber.shade900 : Colors.grey,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isEdit ? 'Edit review' : 'Leave a review',
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                );
-              }),
-            ),
-            const Divider(height: 32),
-            _ratingSlider(
-              title: 'Noise level',
-              subtitle:
-                  '1 = silent, 2 = quiet, 3 = moderate/calm, 4 = loud, 5 = very loud. '
-                  'Current: ${noiseLevelLabel(noiseRounded)}',
-              value: _noise,
-              onChanged: (v) => setState(() => _noise = v),
-              emojiFor: _noiseEmojiFor,
-            ),
-            const SizedBox(height: 16),
-            _ratingSlider(
-              title: 'Comfort',
-              subtitle: 'Seating, temperature, and how pleasant it is to work there (1–5).',
-              value: _comfort,
-              onChanged: (v) => setState(() => _comfort = v),
-            ),
-            const SizedBox(height: 16),
-            _ratingSlider(
-              title: 'Crowd level',
-              subtitle: 'How busy or crowded it felt (1 = sparse, 5 = packed).',
-              value: _crowd,
-              onChanged: (v) => setState(() => _crowd = v),
-              emojiFor: _crowdEmojiFor,
-            ),
-            const SizedBox(height: 16),
-            _ratingSlider(
-              title: 'Ease of access',
-              subtitle: 'How easy it was to get to and use the space (1–5).',
-              value: _access,
-              onChanged: (v) => setState(() => _access = v),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _commentController,
-              decoration: const InputDecoration(
-                labelText: 'Add a comment (optional)',
-                border: OutlineInputBorder(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _submit,
-                child: Text(_isEdit ? 'Save changes' : 'Submit review'),
+              const SizedBox(height: 8),
+              Text(
+                widget.space.name,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-            ),
-            const SizedBox(height: 8),
-          ],
+              const SizedBox(height: 20),
+              Text('Overall Rating', style: Theme.of(context).textTheme.bodyLarge),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(5, (index) {
+                  final starValue = index + 1;
+                  final isSelected = starValue <= _overallRating.round();
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        _overallRating = starValue.toDouble();
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      child: Column(
+                        children: [
+                          Icon(
+                            isSelected ? Icons.star : Icons.star_border,
+                            color: isSelected ? Colors.amber : Colors.grey,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            starValue.toString(),
+                            style: TextStyle(
+                              color: isSelected ? Colors.amber.shade900 : Colors.grey,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const Divider(height: 32),
+              _ratingSlider(
+                title: 'Noise level',
+                subtitle:
+                    '1 = silent, 2 = quiet, 3 = moderate/calm, 4 = loud, 5 = very loud. '
+                    'Current: ${noiseLevelLabel(noiseRounded)}',
+                value: _noise,
+                onChanged: (v) => setState(() => _noise = v),
+                emojiFor: _noiseEmojiFor,
+              ),
+              const SizedBox(height: 16),
+              _ratingSlider(
+                title: 'Comfort',
+                subtitle: 'Seating, temperature, and how pleasant it is to work there (1–5).',
+                value: _comfort,
+                onChanged: (v) => setState(() => _comfort = v),
+              ),
+              const SizedBox(height: 16),
+              _ratingSlider(
+                title: 'Crowd level',
+                subtitle: 'How busy or crowded it felt (1 = sparse, 5 = packed).',
+                value: _crowd,
+                onChanged: (v) => setState(() => _crowd = v),
+                emojiFor: _crowdEmojiFor,
+              ),
+              const SizedBox(height: 16),
+              _ratingSlider(
+                title: 'Ease of access',
+                subtitle: 'How easy it was to get to and use the space (1–5).',
+                value: _access,
+                onChanged: (v) => setState(() => _access = v),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _commentController,
+                decoration: const InputDecoration(
+                  labelText: 'Add a comment (optional)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submit,
+                  child: Text(_isEdit ? 'Save changes' : 'Submit review'),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
-      ),
     );
   }
 }

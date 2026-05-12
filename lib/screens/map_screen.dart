@@ -1,7 +1,11 @@
 import 'package:cmpe_137_study_space/config/sjsu_campus_map.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
+import 'package:cmpe_137_study_space/screens/study_space_detail_screen.dart';
+import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
+import 'package:cmpe_137_study_space/widgets/create_study_space_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -27,13 +31,14 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _loadSpaces() async {
     try {
       final spaces = await StudySpaceService.instance.fetchStudySpaces();
-      final firestoreMappable =
-          spaces.where((s) => studySpaceHasMapPosition(s.latitude, s.longitude)).toList();
+      final firestoreMappable = spaces
+          .where((s) => studySpaceHasMapPosition(s.latitude, s.longitude))
+          .toList();
       final mappable = firestoreMappable.isNotEmpty
           ? firestoreMappable
           : mockStudySpaces
-              .where((s) => studySpaceHasMapPosition(s.latitude, s.longitude))
-              .toList();
+                .where((s) => studySpaceHasMapPosition(s.latitude, s.longitude))
+                .toList();
       final Map<String, List<StudySpace>> groupedSpaces = {};
       for (final space in mappable) {
         final key = '${space.latitude},${space.longitude}';
@@ -44,12 +49,18 @@ class _MapScreenState extends State<MapScreen> {
         for (final entry in groupedSpaces.entries)
           Marker(
             markerId: MarkerId(entry.key),
-            position: LatLng(entry.value.first.latitude, entry.value.first.longitude),
+            position: LatLng(
+              entry.value.first.latitude,
+              entry.value.first.longitude,
+            ),
             infoWindow: InfoWindow(
               title: entry.value.first.building,
-              snippet: '${entry.value.length} space${entry.value.length > 1 ? 's' : ''}',
+              snippet:
+                  '${entry.value.length} space${entry.value.length > 1 ? 's' : ''}',
             ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(_getHueForSpaces(entry.value)),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              _getHueForSpaces(entry.value),
+            ),
             onTap: () => _showSpacesSheet(
               entry.value,
               entry.value.first.building,
@@ -73,11 +84,10 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-
-
   double _getHueForSpaces(List<StudySpace> spaces) {
     if (spaces.isEmpty) return BitmapDescriptor.hueRed;
-    final avgRating = spaces.map((s) => s.rating).reduce((a, b) => a + b) / spaces.length;
+    final avgRating =
+        spaces.map((s) => s.rating).reduce((a, b) => a + b) / spaces.length;
     if (avgRating >= 4.5) return BitmapDescriptor.hueGreen;
     if (avgRating >= 3.5) return BitmapDescriptor.hueOrange;
     return BitmapDescriptor.hueRed;
@@ -93,6 +103,7 @@ class _MapScreenState extends State<MapScreen> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) {
         return DraggableScrollableSheet(
           expand: false,
@@ -123,12 +134,16 @@ class _MapScreenState extends State<MapScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               Icons.menu_book,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
                             ),
                           ),
                           title: Text(space.name),
@@ -188,7 +203,6 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Campus Map')),
@@ -210,8 +224,6 @@ class _MapScreenState extends State<MapScreen> {
         ),
       );
     }
-
-
 
     return Scaffold(
       appBar: AppBar(
