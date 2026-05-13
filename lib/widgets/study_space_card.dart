@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:cmpe_137_study_space/theme/app_theme.dart';
 import 'package:cmpe_137_study_space/models/study_space.dart';
 import 'package:cmpe_137_study_space/screens/study_space_detail_screen.dart';
@@ -40,10 +42,19 @@ class StudySpaceCard extends StatelessWidget {
               width: double.infinity,
               color: Colors.grey.shade300,
               child: space.imageUrl != null
-                  ? Image.network(
-                      space.imageUrl!,
+                  ? CachedNetworkImage(
+                      imageUrl: space.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Center(
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(
+                          color: Colors.white,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Center(
                         child: Icon(Icons.image_outlined, size: 50, color: Colors.grey),
                       ),
                     )

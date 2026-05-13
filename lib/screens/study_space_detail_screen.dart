@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:cmpe_137_study_space/widgets/space_reviews_section.dart';
 import 'package:cmpe_137_study_space/services/auth_scope.dart';
 import 'package:cmpe_137_study_space/services/study_space_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 /// Passed via [GoRouter] `extra` when opening [StudySpaceDetailScreen].
 class StudySpaceDetailArgs {
@@ -244,17 +246,25 @@ class _StudySpaceDetailScreenState extends State<StudySpaceDetailScreen> {
               width: double.infinity,
               color: Colors.grey.shade300,
               child: space.imageUrl != null
-                  ? Image.network(
-                      space.imageUrl!,
+                  ? CachedNetworkImage(
+                      imageUrl: space.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Center(
-                            child: Icon(
-                              Icons.image_outlined,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                          ),
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(
+                          color: Colors.white,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Center(
+                        child: Icon(
+                          Icons.image_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                      ),
                     )
                   : const Center(
                       child: Icon(
