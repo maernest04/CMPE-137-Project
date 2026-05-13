@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="cmpe_137_study_space"
+        android:label="Spartan Spaces"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

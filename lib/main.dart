@@ -186,7 +186,7 @@ class _SpartanSpacesAppState extends State<SpartanSpacesApp> {
     return AuthScope(
       authService: _authService,
       child: MaterialApp.router(
-        title: 'SpartanSpaces',
+        title: 'Spartan Spaces',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _goRouter,
