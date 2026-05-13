@@ -197,9 +197,8 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 16, 20, bottomInset + 20),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 8, 20, bottomInset + 16),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -418,7 +417,6 @@ class _CreateStudySpaceSheetState extends State<CreateStudySpaceSheet> {
             ),
           ),
         ),
-      ),
     );
   }
 }

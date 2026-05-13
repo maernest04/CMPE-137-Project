@@ -6,7 +6,7 @@ final LatLngBounds sjsuCampusBounds = LatLngBounds(
 );
 
 const CameraPosition sjsuInitialCamera = CameraPosition(
-  target: LatLng(37.3352, -121.8813),
+  target: LatLng(37.3356, -121.8815),
   zoom: 17,
 );
 

@@ -17,7 +17,7 @@ class CampusBuilding {
 final List<CampusBuilding> sjsuBuildings = [
   const CampusBuilding(
     name: 'Art Building',
-    location: LatLng(37.3355, -121.8833),
+    location: LatLng(37.3355, -121.8832),
   ),
   const CampusBuilding(
     name: 'Boccardo Business Center (BBC)',
@@ -41,11 +41,11 @@ final List<CampusBuilding> sjsuBuildings = [
   ),
   const CampusBuilding(
     name: 'Diaz Compean Student Union',
-    location: LatLng(37.3360, -121.8814),
+    location: LatLng(37.3365, -121.8813),
   ),
   const CampusBuilding(
     name: 'Dr. Martin Luther King Jr. Library',
-    location: LatLng(37.3358428, -121.8850228),
+    location: LatLng(37.3358, -121.8850),
   ),
   const CampusBuilding(
     name: 'Dudley Moorhead Hall',
@@ -53,7 +53,7 @@ final List<CampusBuilding> sjsuBuildings = [
   ),
   const CampusBuilding(
     name: 'Duncan Hall',
-    location: LatLng(37.3328, -121.8825),
+    location: LatLng(37.3326, -121.8825),
   ),
   const CampusBuilding(
     name: 'Dwight Bentel Hall',
@@ -61,7 +61,7 @@ final List<CampusBuilding> sjsuBuildings = [
   ),
   const CampusBuilding(
     name: 'Engineering Building',
-    location: LatLng(37.3352, -121.8811),
+    location: LatLng(37.3371, -121.8817),
   ),
   const CampusBuilding(
     name: 'Health Building',
@@ -97,7 +97,7 @@ final List<CampusBuilding> sjsuBuildings = [
   ),
   const CampusBuilding(
     name: 'Provident Credit Union Event Center',
-    location: LatLng(37.3350, -121.8795),
+    location: LatLng(37.3352, -121.8795),
   ),
   const CampusBuilding(
     name: 'Science Building',
@@ -105,7 +105,7 @@ final List<CampusBuilding> sjsuBuildings = [
   ),
   const CampusBuilding(
     name: 'Spartan Recreation & Aquatic Center (SRAC)',
-    location: LatLng(37.3335, -121.8790),
+    location: LatLng(37.3331, -121.8794),
   ),
   const CampusBuilding(
     name: 'Student Services Center',
@@ -121,7 +121,7 @@ final List<CampusBuilding> sjsuBuildings = [
   ),
   const CampusBuilding(
     name: 'Tower Hall',
-    location: LatLng(37.3355, -121.8820),
+    location: LatLng(37.3352, -121.8812),
   ),
   const CampusBuilding(
     name: 'Washburn Hall',
@@ -137,7 +137,7 @@ final List<CampusBuilding> sjsuBuildings = [
   ),
   const CampusBuilding(
     name: 'Spartan Village on the Paseo',
-    location: LatLng(37.3330, -121.8890),
+    location: LatLng(37.3330, -121.8887),
   ),
   const CampusBuilding(
     name: 'Other (Off-campus or Custom)',
