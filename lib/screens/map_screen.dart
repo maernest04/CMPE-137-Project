@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -118,41 +120,121 @@ class _MapScreenState extends State<MapScreen> {
                 children: [
                   Text(
                     buildingName,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: ListView.separated(
+                     child: ListView.builder(
                       controller: scrollController,
                       itemCount: spaces.length,
-                      separatorBuilder: (context, index) => const Divider(),
+                      padding: const EdgeInsets.only(bottom: 16),
                       itemBuilder: (context, index) {
                         final space = spaces[index];
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.menu_book,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onPrimaryContainer,
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () {
+                              context.push(
+                                '/study-space/${space.id}',
+                                extra: StudySpaceDetailArgs(
+                                  space: space,
+                                  onReviewSubmitted: _loadSpaces,
+                                ),
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                // Thumbnail Image
+                                Container(
+                                  width: 100,
+                                  height: 100,
+                                  color: Colors.grey.shade100,
+                                  child: space.imageUrl != null
+                                      ? CachedNetworkImage(
+                                          imageUrl: space.imageUrl!,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => Shimmer.fromColors(
+                                            baseColor: Colors.grey.shade300,
+                                            highlightColor: Colors.grey.shade100,
+                                            child: Container(color: Colors.white),
+                                          ),
+                                          errorWidget: (context, url, error) => const Icon(Icons.image_outlined, color: Colors.grey),
+                                        )
+                                      : const Icon(Icons.image_outlined, color: Colors.grey),
+                                ),
+                                // Content
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                space.name,
+                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.star, color: Colors.amber, size: 14),
+                                                const SizedBox(width: 2),
+                                                Text(
+                                                  space.rating.toStringAsFixed(1),
+                                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${space.floor ?? 'Unknown'} Floor • ${space.noiseLevel}',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 4,
+                                          children: [
+                                            if (space.hasOutlets)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green.shade50,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  'Outlets',
+                                                  style: TextStyle(color: Colors.green.shade900, fontSize: 10, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 8.0),
+                                  child: Icon(Icons.chevron_right, color: Colors.grey),
+                                ),
+                              ],
                             ),
                           ),
-                          title: Text(space.name),
-                          subtitle: Text(
-                            '${space.floor != null ? '${space.floor} • ' : ''}${space.areaDescription ?? ''}\n'
-                            'Rating: ${space.rating.toStringAsFixed(1)} • Noise: ${space.noiseLevel}\n'
-                            '${space.hasOutlets ? '🔌 Has Outlets' : 'No Outlets'}',
-                          ),
-                          isThreeLine: true,
                         );
                       },
                     ),
