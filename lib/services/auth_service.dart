@@ -265,9 +265,9 @@ class AuthService extends ChangeNotifier {
       case 'invalid-email':
         return 'Please enter a valid email address.';
       case 'user-not-found':
-        return 'No account found with this email.';
       case 'wrong-password':
-        return 'Incorrect password.';
+      case 'invalid-credential':
+        return 'Incorrect email or password.';
       case 'too-many-requests':
         return 'Too many login attempts. Please try again later.';
       default:
