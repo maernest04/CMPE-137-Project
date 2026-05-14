@@ -417,7 +417,18 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Discover Spaces'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: Badge(
+              label: Text(
+                (
+                  _selectedNoiseLevels.length +
+                  _selectedBuildings.length +
+                  (_filterOutlets ? 1 : 0) +
+                  (_minRating > 0 ? 1 : 0)
+                ).toString(),
+              ),
+              isLabelVisible: hasActiveFilters,
+              child: const Icon(Icons.filter_list),
+            ),
             onPressed: _openFilterSheet,
             tooltip: 'Filter spaces',
           ),
@@ -425,49 +436,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          if (hasActiveFilters)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8,
-              ),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (_minRating > 0)
-                    Chip(
-                      label: Text('$_minRating+ ★'),
-                      onDeleted: () => setState(() => _minRating = 0.0),
-                    ),
-                  ..._selectedNoiseLevels.map(
-                    (level) => Chip(label: Text(level)),
-                  ),
-                  ..._selectedBuildings.map(
-                    (building) => Chip(
-                      label: Text(building),
-                      onDeleted: () {
-                        setState(() {
-                          _selectedBuildings.remove(building);
-                        });
-                      },
-                    ),
-                  ),
-                  if (_filterOutlets) const Chip(label: Text('Has outlets')),
-                  ActionChip(
-                    label: const Text('Clear filters'),
-                    onPressed: () {
-                      setState(() {
-                        _selectedNoiseLevels.clear();
-                        _selectedBuildings.clear();
-                        _filterOutlets = false;
-                        _minRating = 0.0;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
 
           Expanded(
             child: filteredSpaces.isEmpty
@@ -479,6 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 : ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
                     itemCount: filteredSpaces.length,
                     itemBuilder: (context, index) {
                       final space = filteredSpaces[index];
